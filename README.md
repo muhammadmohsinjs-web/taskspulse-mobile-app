@@ -13,10 +13,9 @@ Monorepo for the TasksPulse mobile application.
 │   └── crud.py       # CRUD operations
 │
 └── frontend/         # React Native
-    ├── App.js        # Root component
-    └── src/
-        ├── screens/  # App screens
-        └── services/ # API client
+    ├── App.tsx       # Root component
+    ├── app.json      # Expo app config
+    └── index.ts      # Expo entry point
 ```
 
 ## Quick Start
@@ -34,10 +33,19 @@ API runs at `http://localhost:8000` — docs at `/docs`.
 
 ### Frontend
 
+Requires Node `20.19.4` or newer.
+
 ```bash
 cd frontend
+nvm use 20
 npm install
-npx react-native start
+npm start
+```
+
+Scan the QR code with Expo Go on iOS. If LAN mode does not connect, start with:
+
+```bash
+npm start -- --tunnel
 ```
 
 ## API Endpoints
