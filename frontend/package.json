@@ -2,24 +2,23 @@
   "name": "taskspulse-mobile",
   "version": "0.1.0",
   "private": true,
+  "main": "index.js",
   "scripts": {
-    "android": "react-native run-android",
-    "ios": "react-native run-ios",
-    "start": "react-native start",
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web",
     "lint": "eslint ."
   },
   "dependencies": {
+    "expo": "~52.0.0",
+    "expo-asset": "~11.0.5",
+    "expo-constants": "~17.0.8",
+    "expo-status-bar": "~2.0.0",
     "react": "18.3.1",
     "react-native": "0.76.6"
   },
   "devDependencies": {
-    "@babel/core": "^7.25.2",
-    "@babel/preset-env": "^7.25.3",
-    "@babel/runtime": "^7.25.0",
-    "@react-native/babel-preset": "0.76.6",
-    "@react-native/eslint-config": "0.76.6",
-    "@react-native/metro-config": "0.76.6",
-    "eslint": "^8.19.0",
-    "metro-react-native-babel-preset": "^0.77.0"
+    "@babel/core": "^7.25.2"
   }
 }
