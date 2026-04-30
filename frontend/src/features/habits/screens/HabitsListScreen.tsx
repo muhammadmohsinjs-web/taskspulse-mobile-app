@@ -83,7 +83,14 @@ const HabitsListScreen: React.FC = () => {
     (id: string) => {
       Alert.alert("Delete Habit", "Are you sure? Streak data will be lost.", [
         { text: "Cancel", style: "cancel" },
-        { text: "Delete", style: "destructive", onPress: () => deleteHabit.mutate(id) },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: () =>
+            deleteHabit.mutate(id, {
+              onError: (e: any) => Alert.alert("Error", e.message || "Failed to delete habit"),
+            }),
+        },
       ]);
     },
     [deleteHabit]
@@ -99,7 +106,14 @@ const HabitsListScreen: React.FC = () => {
         renderItem={({ item }) => (
           <HabitRow
             habit={item}
-            onToggle={() => toggleHabit.mutate({ id: item.id, completedToday: item.completedToday })}
+            onToggle={() =>
+              toggleHabit.mutate(
+                { id: item.id, completedToday: item.completedToday },
+                {
+                  onError: (e: any) => Alert.alert("Error", e.message || "Failed to update habit"),
+                }
+              )
+            }
             onLongPress={() => handleDelete(item.id)}
           />
         )}

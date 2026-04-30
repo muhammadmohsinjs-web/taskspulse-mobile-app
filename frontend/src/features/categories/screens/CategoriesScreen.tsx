@@ -98,7 +98,10 @@ const CategoriesScreen: React.FC = () => {
         {
           text: "Delete",
           style: "destructive",
-          onPress: () => deleteCategory.mutate(cat.id),
+          onPress: () =>
+            deleteCategory.mutate(cat.id, {
+              onError: (e: any) => Alert.alert("Error", e.message || "Failed to delete category"),
+            }),
         },
       ]);
     },

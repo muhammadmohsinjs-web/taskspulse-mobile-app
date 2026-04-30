@@ -55,7 +55,14 @@ const DailyCockpitScreen: React.FC = () => {
   const handleTaskToggle = useCallback(
     (task: CockpitTask) => {
       const newStatus = task.status === "done" ? "todo" : "done";
-      updateTask.mutate({ id: task.id, payload: { status: newStatus } });
+      updateTask.mutate(
+        { id: task.id, payload: { status: newStatus } },
+        {
+          onError: (e: any) => {
+            Alert.alert("Error", e.message || "Failed to update task");
+          },
+        }
+      );
     },
     [updateTask]
   );
