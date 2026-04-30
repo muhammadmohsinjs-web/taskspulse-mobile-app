@@ -1,10 +1,12 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, Alert } from "react-native";
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, Alert, Platform } from "react-native";
+import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { theme } from "../../../theme/theme";
 import Modal from "../../../components/ui/Modal";
 import Button from "../../../components/ui/Button";
-import { Task, TaskCreatePayload, Goal } from "../../../types";
+import { Task, TaskCreatePayload, Goal, Category } from "../../../types";
 import { useGoals } from "../../goals/hooks/useGoals";
+import { useCategories } from "../../categories/hooks/useCategories";
 
 interface TaskFormModalProps {
   visible: boolean;
@@ -12,9 +14,7 @@ interface TaskFormModalProps {
   onSave: (payload: TaskCreatePayload) => Promise<void>;
   editingTask?: Task | null;
   saving?: boolean;
-  /** If provided, pre-select this goal for linking */
   preselectedGoalId?: string | null;
-  /** If true, show goal picker for linking existing task */
   showGoalPicker?: boolean;
   onLinkToGoal?: (goalId: string) => Promise<void>;
   linking?: boolean;
@@ -33,6 +33,14 @@ const PRIORITY_OPTIONS = [
   { label: "Urgent", value: "urgent" },
 ] as const;
 
+const RECURRENCE_OPTIONS = [
+  { label: "One-off", value: null },
+  { label: "Daily", value: '{"type":"daily"}' },
+  { label: "Weekly", value: '{"type":"weekly"}' },
+];
+
+const CATEGORY_COLORS = ["#4A90D9", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6", "#EC4899", "#06B6D4"];
+
 const TaskFormModal: React.FC<TaskFormModalProps> = ({
   visible,
   onClose,
@@ -49,9 +57,49 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({
   const [status, setStatus] = useState<"todo" | "in_progress" | "done">(editingTask?.status || "todo");
   const [priority, setPriority] = useState<"low" | "medium" | "high" | "urgent">(editingTask?.priority || "medium");
   const [dueDate, setDueDate] = useState(editingTask?.dueDate || "");
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(editingTask?.categoryId || null);
+  const [recurrenceRule, setRecurrenceRule] = useState<string | null>(editingTask?.recurrenceRule || null);
   const [selectedGoalId, setSelectedGoalId] = useState<string | null>(preselectedGoalId || null);
 
   const { data: goals } = useGoals();
+  const { data: categories } = useCategories();
+
+  // ── Date helpers ────────────────────────────────────────────────
+  const formatDisplayDate = (dateString: string): string => {
+    if (!dateString) return "";
+    try {
+      const d = new Date(dateString);
+      if (isNaN(d.getTime())) return dateString;
+      return d.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
+    } catch {
+      return dateString;
+    }
+  };
+
+  const getDateFromString = (dateString: string): Date => {
+    if (dateString) {
+      const d = new Date(dateString);
+      if (!isNaN(d.getTime())) return d;
+    }
+    return new Date();
+  };
+
+  const handleDateChange = (_event: DateTimePickerEvent, selectedDate?: Date) => {
+    // Android: dismiss the dialog after selection
+    if (Platform.OS === "android") {
+      setShowDatePicker(false);
+    }
+    if (selectedDate) {
+      const formatted = selectedDate.toISOString().split("T")[0]; // YYYY-MM-DD
+      setDueDate(formatted);
+    }
+  };
+
+  const handleClearDate = () => {
+    setDueDate("");
+  };
+  // ────────────────────────────────────────────────────────────────
 
   React.useEffect(() => {
     if (visible) {
@@ -60,6 +108,9 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({
       setStatus(editingTask?.status || "todo");
       setPriority(editingTask?.priority || "medium");
       setDueDate(editingTask?.dueDate || "");
+      setShowDatePicker(false);
+      setSelectedCategoryId(editingTask?.categoryId || null);
+      setRecurrenceRule(editingTask?.recurrenceRule || null);
       setSelectedGoalId(preselectedGoalId || null);
     }
   }, [visible, editingTask, preselectedGoalId]);
@@ -75,6 +126,8 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({
       status,
       priority,
       dueDate: dueDate.trim() || null,
+      categoryId: selectedCategoryId,
+      recurrenceRule,
     });
     if (editingTask && selectedGoalId && onLinkToGoal) {
       await onLinkToGoal(selectedGoalId);
@@ -152,15 +205,106 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({
         ))}
       </View>
 
-      <Text style={styles.label}>Due Date (YYYY-MM-DD, optional)</Text>
-      <TextInput
-        style={styles.input}
-        value={dueDate}
-        onChangeText={setDueDate}
-        placeholder="e.g. 2026-05-15"
-        placeholderTextColor={theme.colors.textMuted}
-        keyboardType="numbers-and-punctuation"
-      />
+      <Text style={styles.label}>Due Date (optional)</Text>
+      <TouchableOpacity
+        style={styles.dateInput}
+        onPress={() => setShowDatePicker(!showDatePicker)}
+        activeOpacity={0.7}
+        accessibilityLabel="Select due date"
+        accessibilityRole="button"
+      >
+        <Text style={styles.calendarIcon}>📅</Text>
+        <Text style={[dueDate ? styles.dateText : styles.datePlaceholder, { flex: 1 }]}>
+          {dueDate ? formatDisplayDate(dueDate) : "Select a date"}
+        </Text>
+        {dueDate ? (
+          <TouchableOpacity
+            onPress={handleClearDate}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            accessibilityLabel="Remove due date"
+          >
+            <Text style={styles.clearDate}>✕</Text>
+          </TouchableOpacity>
+        ) : null}
+      </TouchableOpacity>
+
+      {showDatePicker && (
+        <DateTimePicker
+          value={getDateFromString(dueDate)}
+          mode="date"
+          display={Platform.OS === "ios" ? "inline" : "default"}
+          onChange={handleDateChange}
+        />
+      )}
+
+      <Text style={styles.label}>Recurrence (optional)</Text>
+      <View style={styles.optionRow}>
+        {RECURRENCE_OPTIONS.map((opt) => (
+          <TouchableOpacity
+            key={opt.label}
+            style={[
+              styles.optionChip,
+              recurrenceRule === opt.value && styles.optionChipSelected,
+            ]}
+            onPress={() => setRecurrenceRule(opt.value)}
+          >
+            <Text
+              style={[
+                styles.optionChipText,
+                recurrenceRule === opt.value && styles.optionChipTextSelected,
+              ]}
+            >
+              {opt.label}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      <Text style={styles.label}>Category (optional)</Text>
+      <View style={styles.optionRow}>
+        <TouchableOpacity
+          style={[
+            styles.optionChip,
+            !selectedCategoryId && styles.optionChipSelected,
+          ]}
+          onPress={() => setSelectedCategoryId(null)}
+        >
+          <Text
+            style={[
+              styles.optionChipText,
+              !selectedCategoryId && styles.optionChipTextSelected,
+            ]}
+          >
+            None
+          </Text>
+        </TouchableOpacity>
+        {categories?.map((cat: Category) => (
+          <TouchableOpacity
+            key={cat.id}
+            style={[
+              styles.optionChip,
+              selectedCategoryId === cat.id && styles.optionChipSelected,
+              selectedCategoryId === cat.id
+                ? {}
+                : { borderColor: cat.color },
+            ]}
+            onPress={() =>
+              setSelectedCategoryId(
+                selectedCategoryId === cat.id ? null : cat.id
+              )
+            }
+          >
+            <Text
+              style={[
+                styles.optionChipText,
+                selectedCategoryId === cat.id && styles.optionChipTextSelected,
+              ]}
+            >
+              {cat.name}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
 
       {showGoalPicker && goals && goals.length > 0 && (
         <>
@@ -237,6 +381,33 @@ const styles = StyleSheet.create({
     fontSize: theme.fontSize.md,
     color: theme.colors.textPrimary,
     backgroundColor: theme.colors.background,
+  },
+  dateInput: {
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    borderRadius: theme.borderRadius.md,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
+    backgroundColor: theme.colors.background,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: theme.spacing.sm,
+  },
+  dateText: {
+    fontSize: theme.fontSize.md,
+    color: theme.colors.textPrimary,
+  },
+  datePlaceholder: {
+    fontSize: theme.fontSize.md,
+    color: theme.colors.textMuted,
+  },
+  clearDate: {
+    fontSize: theme.fontSize.lg,
+    color: theme.colors.textMuted,
+    padding: 2,
+  },
+  calendarIcon: {
+    fontSize: theme.fontSize.lg,
   },
   multiline: {
     minHeight: 70,

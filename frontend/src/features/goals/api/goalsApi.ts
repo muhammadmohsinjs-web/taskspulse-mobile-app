@@ -14,13 +14,13 @@ export const goalsApi = {
   },
 
   create: async (payload: GoalCreatePayload): Promise<Goal> => {
-    const body = toSnakeCase(payload as Record<string, unknown>);
+    const body = toSnakeCase(payload as unknown as Record<string, unknown>);
     const data = await apiClient.post<GoalRaw>("/goals", body);
     return mapGoal(data);
   },
 
   update: async (id: string, payload: GoalUpdatePayload): Promise<Goal> => {
-    const body = toSnakeCase(payload as Record<string, unknown>);
+    const body = toSnakeCase(payload as unknown as Record<string, unknown>);
     const data = await apiClient.put<GoalRaw>(`/goals/${id}`, body);
     return mapGoal(data);
   },

@@ -1,3 +1,5 @@
+export const COLORS = ["#4A90D9", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6", "#EC4899", "#06B6D4"];
+
 export const theme = {
   colors: {
     primary: "#4A90D9",

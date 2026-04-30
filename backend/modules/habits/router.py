@@ -1,4 +1,3 @@
-from datetime import date
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
 from database import get_db
@@ -70,16 +69,15 @@ def complete_habit(habit_id: str, db: Session = Depends(get_db)):
     return log
 
 
-@router.delete("/{habit_id}/complete", status_code=status.HTTP_200_OK, summary="Undo today's habit completion")
+@router.delete("/{habit_id}/complete", status_code=status.HTTP_204_NO_CONTENT, summary="Undo today's habit completion")
 def undo_habit_completion(
     habit_id: str,
-    date: str | None = Query(None, description="Date to undo (YYYY-MM-DD), defaults to today"),
+    on_date: str | None = Query(None, alias="date", description="Date to undo (YYYY-MM-DD), defaults to today"),
     db: Session = Depends(get_db),
 ):
-    result = habit_service.undo_completion(db, habit_id, date)
+    result = habit_service.undo_completion(db, habit_id, on_date)
     if not result:
         raise HTTPException(status_code=404, detail="No completion found for this date")
-    return {"detail": "Completion undone"}
 
 
 @router.get("/{habit_id}/streak", response_model=HabitStreakOut, summary="Get streak info for a habit")

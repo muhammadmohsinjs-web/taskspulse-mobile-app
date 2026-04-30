@@ -9,13 +9,13 @@ export const categoriesApi = {
   },
 
   create: async (payload: CategoryCreatePayload): Promise<Category> => {
-    const body = toSnakeCase(payload as Record<string, unknown>);
+    const body = toSnakeCase(payload as unknown as Record<string, unknown>);
     const data = await apiClient.post<CategoryRaw>("/categories", body);
     return mapCategory(data);
   },
 
   update: async (id: string, payload: CategoryUpdatePayload): Promise<Category> => {
-    const body = toSnakeCase(payload as Record<string, unknown>);
+    const body = toSnakeCase(payload as unknown as Record<string, unknown>);
     const data = await apiClient.put<CategoryRaw>(`/categories/${id}`, body);
     return mapCategory(data);
   },

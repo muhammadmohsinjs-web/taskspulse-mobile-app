@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, DateTime, UniqueConstraint, func
+from sqlalchemy import Column, String, DateTime, ForeignKey, Index, UniqueConstraint, func
 from database import Base
 from modules.utils import generate_uuid
 
@@ -18,10 +18,13 @@ class Goal(Base):
 
 class GoalTaskLink(Base):
     __tablename__ = "goal_task_links"
+    __table_args__ = (
+        UniqueConstraint("goal_id", "task_id"),
+        Index("idx_goal_task_links_goal_id", "goal_id"),
+        Index("idx_goal_task_links_task_id", "task_id"),
+    )
 
     id = Column(String, primary_key=True, default=generate_uuid)
-    goal_id = Column(String, nullable=False)
-    task_id = Column(String, nullable=False)
+    goal_id = Column(String, ForeignKey("goals.id"), nullable=False)
+    task_id = Column(String, ForeignKey("tasks.id"), nullable=False)
     created_at = Column(DateTime, server_default=func.now())
-
-    __table_args__ = (UniqueConstraint("goal_id", "task_id"),)

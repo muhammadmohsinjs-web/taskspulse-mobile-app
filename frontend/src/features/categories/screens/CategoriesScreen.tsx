@@ -7,19 +7,21 @@ import {
   TouchableOpacity,
   Alert,
   TextInput,
-  RefreshControl,
 } from "react-native";
-import { theme } from "../../../theme/theme";
+import { theme, COLORS } from "../../../theme/theme";
+import { useRefreshControl } from "../../../hooks/useRefreshControl";
+import { getErrorMessage } from "../../../utils/error";
 import { useCategories, useCreateCategory, useDeleteCategory, useUpdateCategory } from "../hooks/useCategories";
 import CategoryChip from "../components/CategoryChip";
 import Modal from "../../../components/ui/Modal";
 import Button from "../../../components/ui/Button";
+import FAB from "../../../components/ui/FAB";
 import LoadingSpinner from "../../../components/ui/LoadingSpinner";
 import EmptyState from "../../../components/ui/EmptyState";
 import Card from "../../../components/ui/Card";
 import { Category } from "../../../types";
 
-const COLORS = ["#4A90D9", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6", "#EC4899", "#06B6D4", "#6366F1"];
+const DEFAULT_COLOR = theme.colors.primary;
 
 const CategoriesScreen: React.FC = () => {
   const { data: categories, isLoading, isError, refetch } = useCategories();
@@ -30,32 +32,24 @@ const CategoriesScreen: React.FC = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [name, setName] = useState("");
-  const [selectedColor, setSelectedColor] = useState(COLORS[0]);
+  const [selectedColor, setSelectedColor] = useState(DEFAULT_COLOR);
   const [appliesTo, setAppliesTo] = useState<"both" | "task" | "habit">("both");
   const [saving, setSaving] = useState(false);
-  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const handleRefresh = useCallback(async () => {
-    setIsRefreshing(true);
-    try {
-      await refetch();
-    } finally {
-      setIsRefreshing(false);
-    }
-  }, [refetch]);
+  const { refreshControl } = useRefreshControl({ refetch });
 
   const closeModal = useCallback(() => {
     setModalVisible(false);
     setEditingCategory(null);
     setName("");
-    setSelectedColor(COLORS[0]);
+    setSelectedColor(DEFAULT_COLOR);
     setAppliesTo("both");
   }, []);
 
   const openCreate = () => {
     setEditingCategory(null);
     setName("");
-    setSelectedColor(COLORS[0]);
+    setSelectedColor(DEFAULT_COLOR);
     setAppliesTo("both");
     setModalVisible(true);
   };
@@ -84,8 +78,8 @@ const CategoriesScreen: React.FC = () => {
         await createCategory.mutateAsync({ name: name.trim(), color: selectedColor, appliesTo });
       }
       setModalVisible(false);
-    } catch (e: any) {
-      Alert.alert("Error", e.message || "Failed to save category");
+    } catch (e: unknown) {
+      Alert.alert("Error", getErrorMessage(e, "Failed to save category"));
     } finally {
       setSaving(false);
     }
@@ -100,7 +94,7 @@ const CategoriesScreen: React.FC = () => {
           style: "destructive",
           onPress: () =>
             deleteCategory.mutate(cat.id, {
-              onError: (e: any) => Alert.alert("Error", e.message || "Failed to delete category"),
+              onError: (e: unknown) => Alert.alert("Error", getErrorMessage(e, "Failed to delete category")),
             }),
         },
       ]);
@@ -115,6 +109,8 @@ const CategoriesScreen: React.FC = () => {
       <FlatList
         data={categories || []}
         keyExtractor={(item) => item.id}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
         renderItem={({ item }) => (
           <Card style={styles.categoryCard}>
             <View style={styles.categoryRow}>
@@ -142,15 +138,10 @@ const CategoriesScreen: React.FC = () => {
           )
         }
         contentContainerStyle={styles.listContent}
-        refreshControl={
-          <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} colors={[theme.colors.primary]} />
-        }
+        refreshControl={refreshControl}
       />
 
-      {/* FAB */}
-      <TouchableOpacity style={styles.fab} onPress={openCreate} activeOpacity={0.8}>
-        <Text style={styles.fabText}>+</Text>
-      </TouchableOpacity>
+      <FAB onPress={openCreate} accessibilityLabel="Add category" />
 
       {/* Create/Edit Modal */}
       <Modal
@@ -235,20 +226,6 @@ const styles = StyleSheet.create({
   actionBtn: { padding: theme.spacing.xs },
   editBtn: { fontSize: theme.fontSize.sm, color: theme.colors.primary, fontWeight: "600" },
   deleteBtn: { fontSize: theme.fontSize.md, color: theme.colors.danger, fontWeight: "700" },
-  fab: {
-    position: "absolute",
-    bottom: 24,
-    right: 24,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: theme.colors.primary,
-    justifyContent: "center",
-    alignItems: "center",
-    ...theme.shadow,
-    elevation: 6,
-  },
-  fabText: { color: "#FFF", fontSize: 28, fontWeight: "300", marginTop: -2 },
   label: {
     fontSize: theme.fontSize.sm,
     fontWeight: "600",

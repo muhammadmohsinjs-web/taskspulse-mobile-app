@@ -6,12 +6,14 @@ import {
   TouchableOpacity,
   Text,
   Alert,
-  RefreshControl,
 } from "react-native";
 import { theme } from "../../../theme/theme";
+import { useRefreshControl } from "../../../hooks/useRefreshControl";
+import { getErrorMessage } from "../../../utils/error";
 import { useTasks, useCreateTask, useUpdateTask, useDeleteTask } from "../hooks/useTasks";
 import TaskRow from "../components/TaskRow";
 import TaskFormModal from "../components/TaskFormModal";
+import FAB from "../../../components/ui/FAB";
 import LoadingSpinner from "../../../components/ui/LoadingSpinner";
 import EmptyState from "../../../components/ui/EmptyState";
 import { Task, TaskCreatePayload, TaskUpdatePayload } from "../../../types";
@@ -35,16 +37,8 @@ const TaskListScreen: React.FC = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [saving, setSaving] = useState(false);
-  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const handleRefresh = useCallback(async () => {
-    setIsRefreshing(true);
-    try {
-      await refetch();
-    } finally {
-      setIsRefreshing(false);
-    }
-  }, [refetch]);
+  const { refreshControl } = useRefreshControl({ refetch });
 
   const closeModal = useCallback(() => {
     setModalVisible(false);
@@ -61,8 +55,8 @@ const TaskListScreen: React.FC = () => {
           await createTask.mutateAsync(payload);
         }
         closeModal();
-      } catch (e: any) {
-        Alert.alert("Error", e.message || "Failed to save task");
+      } catch (e: unknown) {
+        Alert.alert("Error", getErrorMessage(e, "Failed to save task"));
       } finally {
         setSaving(false);
       }
@@ -75,9 +69,7 @@ const TaskListScreen: React.FC = () => {
       const nextStatus = task.status === "done" ? "todo" : "done";
       updateTask.mutate(
         { id: task.id, payload: { status: nextStatus } },
-        {
-          onError: (e: any) => Alert.alert("Error", e.message || "Failed to update task"),
-        }
+        { onError: (e: unknown) => Alert.alert("Error", getErrorMessage(e, "Failed to update task")) }
       );
     },
     [updateTask]
@@ -92,7 +84,7 @@ const TaskListScreen: React.FC = () => {
           style: "destructive",
           onPress: () =>
             deleteTask.mutate(id, {
-              onError: (e: any) => Alert.alert("Error", e.message || "Failed to delete task"),
+              onError: (e: unknown) => Alert.alert("Error", getErrorMessage(e, "Failed to delete task")),
             }),
         },
       ]);
@@ -132,6 +124,8 @@ const TaskListScreen: React.FC = () => {
       <FlatList
         data={tasks || []}
         keyExtractor={(item) => item.id}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
         renderItem={({ item }) => (
           <TaskRow
             task={item}
@@ -148,19 +142,10 @@ const TaskListScreen: React.FC = () => {
           )
         }
         contentContainerStyle={styles.listContent}
-        refreshControl={
-          <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} colors={[theme.colors.primary]} />
-        }
+        refreshControl={refreshControl}
       />
 
-      {/* FAB */}
-      <TouchableOpacity
-        style={styles.fab}
-        onPress={() => setModalVisible(true)}
-        activeOpacity={0.8}
-      >
-        <Text style={styles.fabText}>+</Text>
-      </TouchableOpacity>
+      <FAB onPress={() => setModalVisible(true)} accessibilityLabel="Add task" />
 
       {/* Create/Edit Modal */}
       <TaskFormModal
@@ -204,20 +189,6 @@ const styles = StyleSheet.create({
     color: "#FFF",
   },
   listContent: { padding: theme.spacing.lg, paddingBottom: 100 },
-  fab: {
-    position: "absolute",
-    bottom: 24,
-    right: 24,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: theme.colors.primary,
-    justifyContent: "center",
-    alignItems: "center",
-    ...theme.shadow,
-    elevation: 6,
-  },
-  fabText: { color: "#FFF", fontSize: 28, fontWeight: "300", marginTop: -2 },
 });
 
 export default TaskListScreen;

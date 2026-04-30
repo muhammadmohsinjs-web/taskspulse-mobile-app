@@ -7,6 +7,7 @@ export interface Goal {
   progress: number;
   totalTasks: number;
   completedTasks: number;
+  deletedAt: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -20,6 +21,7 @@ export interface GoalRaw {
   progress: number;
   total_tasks: number;
   completed_tasks: number;
+  deleted_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -34,6 +36,7 @@ export function mapGoal(raw: GoalRaw): Goal {
     progress: raw.progress,
     totalTasks: raw.total_tasks,
     completedTasks: raw.completed_tasks,
+    deletedAt: raw.deleted_at,
     createdAt: raw.created_at,
     updatedAt: raw.updated_at,
   };

@@ -5,7 +5,7 @@ import { GoalCreatePayload, GoalUpdatePayload } from "../../../types/goal";
 export function useGoals() {
   return useQuery({
     queryKey: ["goals"],
-    queryFn: () => goalsApi.getAll(),
+    queryFn: goalsApi.getAll,
   });
 }
 

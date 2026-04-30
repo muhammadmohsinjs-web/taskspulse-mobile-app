@@ -1,12 +1,13 @@
 from datetime import datetime
+from typing import Literal
 from pydantic import BaseModel, Field
 
 
 class TaskCreate(BaseModel):
     title: str
     description: str = ""
-    status: str = "todo"
-    priority: str = "medium"
+    status: Literal["todo", "in_progress", "done"] = "todo"
+    priority: Literal["low", "medium", "high", "urgent"] = "medium"
     due_date: str | None = None
     category_id: str | None = None
     recurrence_rule: str | None = None
@@ -15,8 +16,8 @@ class TaskCreate(BaseModel):
 class TaskUpdate(BaseModel):
     title: str | None = None
     description: str | None = None
-    status: str | None = None
-    priority: str | None = None
+    status: Literal["todo", "in_progress", "done"] | None = None
+    priority: Literal["low", "medium", "high", "urgent"] | None = None
     due_date: str | None = None
     category_id: str | None = None
     recurrence_rule: str | None = None

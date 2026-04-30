@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { tasksApi } from "../api/tasksApi";
 import { TaskCreatePayload, TaskUpdatePayload } from "../../../types";
 
-export function useTasks(params?: { date?: string; status?: string; categoryId?: string; goalId?: string }) {
+export function useTasks(params?: { date?: string; status?: string; categoryId?: string; goalId?: string; skip?: number; limit?: number }) {
   return useQuery({
     queryKey: ["tasks", params],
     queryFn: () => tasksApi.getAll(params),

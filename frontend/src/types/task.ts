@@ -63,4 +63,5 @@ export interface TaskUpdatePayload {
   dueDate?: string | null;
   categoryId?: string | null;
   recurrenceRule?: string | null;
+  completedAt?: string | null;
 }

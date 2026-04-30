@@ -8,9 +8,11 @@ const getBaseUrl = (): string => {
 };
 
 const BASE_URL = getBaseUrl();
+const DEFAULT_TIMEOUT = 15000;
 
 interface RequestOptions extends Omit<RequestInit, "body"> {
   body?: unknown;
+  timeout?: number;
 }
 
 class ApiError extends Error {
@@ -24,7 +26,10 @@ class ApiError extends Error {
 
 async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 10000);
+  const timeout = options.timeout ?? DEFAULT_TIMEOUT;
+  const timer = setTimeout(() => {
+    try { controller.abort(); } catch { /* already aborted */ }
+  }, timeout);
 
   try {
     const { body, ...rest } = options;
@@ -59,11 +64,24 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   }
 }
 
+function mergeSignals(signal1: AbortSignal, signal2?: AbortSignal): AbortSignal {
+  if (!signal2) return signal1;
+  const controller = new AbortController();
+  const onAbort = () => {
+    controller.abort();
+    signal1.removeEventListener("abort", onAbort);
+    signal2.removeEventListener("abort", onAbort);
+  };
+  signal1.addEventListener("abort", onAbort);
+  signal2.addEventListener("abort", onAbort);
+  return controller.signal;
+}
+
 export const apiClient = {
-  get: <T>(path: string) => request<T>(path),
-  post: <T>(path: string, body?: unknown) => request<T>(path, { method: "POST", body }),
-  put: <T>(path: string, body?: unknown) => request<T>(path, { method: "PUT", body }),
-  delete: <T>(path: string) => request<T>(path, { method: "DELETE" }),
+  get: <T>(path: string, signal?: AbortSignal) => request<T>(path, { signal }),
+  post: <T>(path: string, body?: unknown, signal?: AbortSignal) => request<T>(path, { method: "POST", body, signal }),
+  put: <T>(path: string, body?: unknown, signal?: AbortSignal) => request<T>(path, { method: "PUT", body, signal }),
+  delete: <T>(path: string, signal?: AbortSignal) => request<T>(path, { method: "DELETE", signal }),
 };
 
 export { ApiError };

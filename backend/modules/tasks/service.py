@@ -45,7 +45,7 @@ def update_task(db: Session, task_id: str, task: TaskUpdate):
     if not db_task:
         return None
     update_data = task.model_dump(exclude_unset=True)
-    if "status" in update_data:
+    if "status" in update_data and "completed_at" not in update_data:
         if update_data["status"] == "done" and db_task.status != "done":
             update_data["completed_at"] = datetime.now(timezone.utc).isoformat()
         elif update_data["status"] != "done":

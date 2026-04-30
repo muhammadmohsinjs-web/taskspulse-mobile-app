@@ -28,6 +28,8 @@
       "bundler": "metro",
       "favicon": "./assets/favicon.png"
     },
-    "plugins": []
+    "plugins": [
+      "@react-native-community/datetimepicker"
+    ]
   }
 }

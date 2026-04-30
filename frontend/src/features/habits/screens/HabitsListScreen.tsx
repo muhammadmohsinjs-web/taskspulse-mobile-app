@@ -7,20 +7,22 @@ import {
   TouchableOpacity,
   Alert,
   TextInput,
-  RefreshControl,
 } from "react-native";
-import { theme } from "../../../theme/theme";
+import { theme, COLORS } from "../../../theme/theme";
+import { useRefreshControl } from "../../../hooks/useRefreshControl";
+import { getErrorMessage } from "../../../utils/error";
 import { useHabits, useCreateHabit, useToggleHabit, useDeleteHabit } from "../hooks/useHabits";
 import { useCategories } from "../../categories/hooks/useCategories";
 import HabitRow from "../components/HabitRow";
 import Modal from "../../../components/ui/Modal";
 import Button from "../../../components/ui/Button";
+import FAB from "../../../components/ui/FAB";
 import LoadingSpinner from "../../../components/ui/LoadingSpinner";
 import EmptyState from "../../../components/ui/EmptyState";
 import CategoryChip from "../../categories/components/CategoryChip";
 import { Category } from "../../../types";
 
-const COLORS = ["#4A90D9", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6", "#EC4899", "#06B6D4"];
+const DEFAULT_COLOR = theme.colors.primary;
 
 const HabitsListScreen: React.FC = () => {
   const { data: habits, isLoading, isError, refetch } = useHabits();
@@ -33,25 +35,17 @@ const HabitsListScreen: React.FC = () => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
-  const [selectedColor, setSelectedColor] = useState(COLORS[0]);
+  const [selectedColor, setSelectedColor] = useState(DEFAULT_COLOR);
   const [saving, setSaving] = useState(false);
-  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const handleRefresh = useCallback(async () => {
-    setIsRefreshing(true);
-    try {
-      await refetch();
-    } finally {
-      setIsRefreshing(false);
-    }
-  }, [refetch]);
+  const { refreshControl } = useRefreshControl({ refetch });
 
   const closeModal = useCallback(() => {
     setModalVisible(false);
     setTitle("");
     setDescription("");
     setSelectedCategoryId(null);
-    setSelectedColor(COLORS[0]);
+    setSelectedColor(DEFAULT_COLOR);
   }, []);
 
   const handleCreate = useCallback(async () => {
@@ -70,10 +64,10 @@ const HabitsListScreen: React.FC = () => {
       setTitle("");
       setDescription("");
       setSelectedCategoryId(null);
-      setSelectedColor(COLORS[0]);
+      setSelectedColor(DEFAULT_COLOR);
       setModalVisible(false);
-    } catch (e: any) {
-      Alert.alert("Error", e.message || "Failed to create habit");
+    } catch (e: unknown) {
+      Alert.alert("Error", getErrorMessage(e, "Failed to create habit"));
     } finally {
       setSaving(false);
     }
@@ -88,7 +82,7 @@ const HabitsListScreen: React.FC = () => {
           style: "destructive",
           onPress: () =>
             deleteHabit.mutate(id, {
-              onError: (e: any) => Alert.alert("Error", e.message || "Failed to delete habit"),
+              onError: (e: unknown) => Alert.alert("Error", getErrorMessage(e, "Failed to delete habit")),
             }),
         },
       ]);
@@ -103,15 +97,15 @@ const HabitsListScreen: React.FC = () => {
       <FlatList
         data={habits || []}
         keyExtractor={(item) => item.id}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
         renderItem={({ item }) => (
           <HabitRow
             habit={item}
             onToggle={() =>
               toggleHabit.mutate(
                 { id: item.id, completedToday: item.completedToday },
-                {
-                  onError: (e: any) => Alert.alert("Error", e.message || "Failed to update habit"),
-                }
+                { onError: (e: unknown) => Alert.alert("Error", getErrorMessage(e, "Failed to update habit")) }
               )
             }
             onLongPress={() => handleDelete(item.id)}
@@ -125,15 +119,10 @@ const HabitsListScreen: React.FC = () => {
           )
         }
         contentContainerStyle={styles.listContent}
-        refreshControl={
-          <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} colors={[theme.colors.primary]} />
-        }
+        refreshControl={refreshControl}
       />
 
-      {/* FAB */}
-      <TouchableOpacity style={styles.fab} onPress={() => setModalVisible(true)} activeOpacity={0.8}>
-        <Text style={styles.fabText}>+</Text>
-      </TouchableOpacity>
+      <FAB onPress={() => setModalVisible(true)} accessibilityLabel="Add habit" />
 
       {/* Create Modal */}
       <Modal visible={modalVisible} onClose={closeModal} title="New Habit">
@@ -197,20 +186,6 @@ const HabitsListScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.colors.background },
   listContent: { padding: theme.spacing.lg, paddingBottom: 100 },
-  fab: {
-    position: "absolute",
-    bottom: 24,
-    right: 24,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: theme.colors.primary,
-    justifyContent: "center",
-    alignItems: "center",
-    ...theme.shadow,
-    elevation: 6,
-  },
-  fabText: { color: "#FFF", fontSize: 28, fontWeight: "300", marginTop: -2 },
   label: {
     fontSize: theme.fontSize.sm,
     fontWeight: "600",

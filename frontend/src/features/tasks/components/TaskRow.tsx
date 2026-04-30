@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { theme } from "../../../theme/theme";
+import { formatShortDate } from "../../../utils/date";
 import Badge from "../../../components/ui/Badge";
 import { Task } from "../../../types";
 
@@ -43,7 +44,7 @@ const TaskRow: React.FC<TaskRowProps> = ({ task, onToggle, onPress, onLongPress 
             <Badge label={task.priority} color={PRIORITY_COLORS[task.priority]} />
           )}
           {task.dueDate && (
-            <Text style={styles.dueDate}>{task.dueDate}</Text>
+            <Text style={styles.dueDate}>{formatShortDate(task.dueDate)}</Text>
           )}
           {isDone && (
             <Text style={styles.doneLabel}>Done</Text>

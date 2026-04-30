@@ -1,17 +1,10 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { theme } from "../../../theme/theme";
-
-interface HabitRowData {
-  id: string;
-  title: string;
-  description: string;
-  completedToday: boolean;
-  currentStreak: number;
-}
+import { Habit } from "../../../types";
 
 interface HabitRowProps {
-  habit: HabitRowData;
+  habit: Pick<Habit, "id" | "title" | "description" | "completedToday" | "currentStreak" | "color">;
   onToggle: () => void;
   onLongPress?: () => void;
 }

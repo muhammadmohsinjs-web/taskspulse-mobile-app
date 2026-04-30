@@ -6,10 +6,13 @@ import {
   StyleSheet,
   TouchableOpacity,
   Alert,
-  RefreshControl,
 } from "react-native";
-import { useRoute, useNavigation } from "@react-navigation/native";
+import { useRoute, useNavigation, RouteProp } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { theme } from "../../../theme/theme";
+import { useRefreshControl } from "../../../hooks/useRefreshControl";
+import { getErrorMessage } from "../../../utils/error";
+import { MoreStackParamList } from "../../../types";
 import { useGoal, useLinkTaskToGoal, useUnlinkTaskFromGoal, useDeleteGoal } from "../hooks/useGoals";
 import { useTasks, useCreateTask, useUpdateTask } from "../../tasks/hooks/useTasks";
 import ProgressBar from "../../../components/ui/ProgressBar";
@@ -21,9 +24,12 @@ import TaskRow from "../../tasks/components/TaskRow";
 import TaskFormModal from "../../tasks/components/TaskFormModal";
 import { Task, TaskCreatePayload } from "../../../types";
 
+type GoalDetailRouteProp = RouteProp<MoreStackParamList, "GoalDetail">;
+type GoalDetailNavProp = NativeStackNavigationProp<MoreStackParamList, "GoalDetail">;
+
 const GoalDetailScreen: React.FC = () => {
-  const route = useRoute<any>();
-  const navigation = useNavigation<any>();
+  const route = useRoute<GoalDetailRouteProp>();
+  const navigation = useNavigation<GoalDetailNavProp>();
   const { goalId } = route.params;
 
   const { data: goal, isLoading, isError, refetch: refetchGoal } = useGoal(goalId);
@@ -36,17 +42,12 @@ const GoalDetailScreen: React.FC = () => {
 
   const [addModalVisible, setAddModalVisible] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [linking, setLinking] = useState(false);
-  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const handleRefresh = useCallback(async () => {
-    setIsRefreshing(true);
-    try {
-      await Promise.all([refetchGoal(), refetchTasks()]);
-    } finally {
-      setIsRefreshing(false);
-    }
-  }, [refetchGoal, refetchTasks]);
+  const handleRefresh = useCallback(
+    async () => { await Promise.all([refetchGoal(), refetchTasks()]); },
+    [refetchGoal, refetchTasks]
+  );
+  const { refreshControl } = useRefreshControl({ refetch: handleRefresh });
 
   const handleToggleTask = useCallback(
     (task: Task) => {
@@ -55,7 +56,7 @@ const GoalDetailScreen: React.FC = () => {
         { id: task.id, payload: { status: nextStatus } },
         {
           onSuccess: () => refetchGoal(),
-          onError: (e: any) => Alert.alert("Error", e.message || "Failed to update task"),
+          onError: (e: unknown) => Alert.alert("Error", getErrorMessage(e, "Failed to update task")),
         }
       );
     },
@@ -67,18 +68,13 @@ const GoalDetailScreen: React.FC = () => {
       setSaving(true);
       try {
         const newTask = await createTask.mutateAsync(payload);
-        setSaving(false);
-        setLinking(true);
-        try {
-          await linkTask.mutateAsync({ goalId, taskId: newTask.id });
-        } finally {
-          setLinking(false);
-        }
+        await linkTask.mutateAsync({ goalId, taskId: newTask.id });
         refetchTasks();
         refetchGoal();
         setAddModalVisible(false);
-      } catch (e: any) {
-        Alert.alert("Error", e.message || "Failed to create task");
+      } catch (e: unknown) {
+        Alert.alert("Error", getErrorMessage(e, "Failed to create task"));
+      } finally {
         setSaving(false);
       }
     },
@@ -99,7 +95,7 @@ const GoalDetailScreen: React.FC = () => {
                   refetchTasks();
                   refetchGoal();
                 },
-                onError: (e: any) => Alert.alert("Error", e.message || "Failed to unlink"),
+                onError: (e: unknown) => Alert.alert("Error", getErrorMessage(e, "Failed to unlink")),
               }
             );
           },
@@ -118,7 +114,7 @@ const GoalDetailScreen: React.FC = () => {
         onPress: () => {
           deleteGoal.mutate(goalId, {
             onSuccess: () => navigation.goBack(),
-            onError: (e: any) => Alert.alert("Error", e.message || "Failed to delete goal"),
+             onError: (e: unknown) => Alert.alert("Error", getErrorMessage(e, "Failed to delete goal")),
           });
         },
       },
@@ -128,14 +124,21 @@ const GoalDetailScreen: React.FC = () => {
   if (isLoading) return <LoadingSpinner message="Loading goal..." />;
   if (isError || !goal) return <EmptyState icon="⚠️" title="Goal not found" subtitle="It may have been deleted" />;
 
+  const goalCardStyle: import("react-native").ViewStyle = {
+    ...styles.goalCard,
+    borderLeftColor: goal.color,
+  };
+
   return (
     <View style={styles.container}>
       <FlatList
         data={tasks || []}
         keyExtractor={(item) => item.id}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
         ListHeaderComponent={
           <View>
-            <Card style={styles.goalCard}>
+            <Card style={goalCardStyle}>
               <View style={styles.goalHeader}>
                 <Text style={styles.goalTitle}>{goal.title}</Text>
                 <TouchableOpacity onPress={handleDeleteGoal} style={styles.deleteBtn}>
@@ -167,7 +170,7 @@ const GoalDetailScreen: React.FC = () => {
             <TaskRow
               task={item}
               onToggle={() => handleToggleTask(item)}
-              onPress={() => {}}
+              onPress={() => handleToggleTask(item)}
               onLongPress={() => handleUnlink(item.id)}
             />
           </View>
@@ -176,9 +179,7 @@ const GoalDetailScreen: React.FC = () => {
           <EmptyState icon="📋" title="No linked tasks" subtitle="Tap Add Task to link a task to this goal" />
         }
         contentContainerStyle={styles.listContent}
-        refreshControl={
-          <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} colors={[theme.colors.primary]} />
-        }
+        refreshControl={refreshControl}
       />
 
       {/* Add Task Modal */}
@@ -187,7 +188,6 @@ const GoalDetailScreen: React.FC = () => {
         onClose={() => setAddModalVisible(false)}
         onSave={handleLinkNewTask}
         saving={saving}
-        linking={linking}
       />
     </View>
   );
@@ -196,10 +196,9 @@ const GoalDetailScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.colors.background },
   listContent: { padding: theme.spacing.lg, paddingBottom: 100 },
-  goalCard: {
+    goalCard: {
     marginBottom: theme.spacing.xl,
     borderLeftWidth: 4,
-    borderLeftColor: theme.colors.primary,
   },
   goalHeader: {
     flexDirection: "row",

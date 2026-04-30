@@ -28,8 +28,6 @@ const styles = StyleSheet.create({
     paddingVertical: theme.spacing.xs,
     borderRadius: theme.borderRadius.full,
     borderWidth: 1,
-    marginRight: theme.spacing.sm,
-    marginBottom: theme.spacing.sm,
   },
   text: {
     fontSize: theme.fontSize.sm,

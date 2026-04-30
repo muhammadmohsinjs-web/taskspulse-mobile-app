@@ -10,13 +10,36 @@ def _compute_progress(db: Session, goal_id: str):
     total = len(links)
     if total == 0:
         return 0.0, 0, 0
-    completed = 0
-    for link in links:
-        task = db.query(Task).filter(Task.id == link.task_id, Task.deleted_at.is_(None)).first()
-        if task and task.status == "done":
-            completed += 1
+    task_ids = [link.task_id for link in links]
+    tasks = db.query(Task).filter(Task.id.in_(task_ids), Task.deleted_at.is_(None)).all()
+    task_status_map = {t.id: t.status for t in tasks}
+    completed = sum(1 for link in links if task_status_map.get(link.task_id) == "done")
     progress = completed / total if total > 0 else 0.0
     return progress, total, completed
+
+
+def _batch_compute_progress(db: Session, goal_ids: list[str]) -> dict[str, tuple[float, int, int]]:
+    if not goal_ids:
+        return {}
+    links = db.query(GoalTaskLink).filter(GoalTaskLink.goal_id.in_(goal_ids)).all()
+    goal_link_map: dict[str, list[GoalTaskLink]] = {gid: [] for gid in goal_ids}
+    for link in links:
+        goal_link_map[link.goal_id].append(link)
+    all_task_ids = list({link.task_id for link in links})
+    task_status_map: dict[str, str] = {}
+    if all_task_ids:
+        tasks = db.query(Task).filter(Task.id.in_(all_task_ids), Task.deleted_at.is_(None)).all()
+        task_status_map = {t.id: t.status for t in tasks}
+    result: dict[str, tuple[float, int, int]] = {}
+    for gid in goal_ids:
+        g_links = goal_link_map.get(gid, [])
+        total = len(g_links)
+        if total == 0:
+            result[gid] = (0.0, 0, 0)
+        else:
+            completed = sum(1 for link in g_links if task_status_map.get(link.task_id) == "done")
+            result[gid] = (completed / total, total, completed)
+    return result
 
 
 def _goal_to_out(db: Session, goal: Goal) -> GoalOut:
@@ -28,8 +51,6 @@ def _goal_to_out(db: Session, goal: Goal) -> GoalOut:
         target_date=goal.target_date,
         color=goal.color,
         deleted_at=goal.deleted_at,
-        created_at=str(goal.created_at) if goal.created_at else "",
-        updated_at=str(goal.updated_at) if goal.updated_at else "",
         progress=progress,
         total_tasks=total,
         completed_tasks=completed,
@@ -38,7 +59,23 @@ def _goal_to_out(db: Session, goal: Goal) -> GoalOut:
 
 def get_goals(db: Session) -> list[GoalOut]:
     goals = db.query(Goal).filter(Goal.deleted_at.is_(None)).order_by(Goal.created_at.desc()).all()
-    return [_goal_to_out(db, g) for g in goals]
+    goal_ids = [g.id for g in goals]
+    progress_map = _batch_compute_progress(db, goal_ids)
+    results = []
+    for g in goals:
+        p, total, completed = progress_map.get(g.id, (0.0, 0, 0))
+        results.append(GoalOut(
+            id=g.id,
+            title=g.title,
+            description=g.description,
+            target_date=g.target_date,
+            color=g.color,
+            deleted_at=g.deleted_at,
+            progress=p,
+            total_tasks=total,
+            completed_tasks=completed,
+        ))
+    return results
 
 
 def get_goal(db: Session, goal_id: str) -> GoalOut | None:

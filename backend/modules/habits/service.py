@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 
 def get_habits(db: Session):
-    return db.query(Habit).filter(Habit.deleted_at.is_(None)).order_by(Habit.created_at).all()
+    return db.query(Habit).filter(Habit.deleted_at.is_(None)).order_by(Habit.created_at.desc()).all()
 
 
 def get_habit(db: Session, habit_id: str):
@@ -18,12 +18,11 @@ def get_habit(db: Session, habit_id: str):
 def create_habit(db: Session, habit: HabitCreate):
     db_habit = Habit(**habit.model_dump())
     db.add(db_habit)
-    db.commit()
-    db.refresh(db_habit)
-    # Create initial streak record
+    db.flush()
     db_streak = HabitStreak(habit_id=db_habit.id)
     db.add(db_streak)
     db.commit()
+    db.refresh(db_habit)
     return db_habit
 
 
@@ -97,6 +96,29 @@ def get_habit_completions_for_date(db: Session, habit_id: str, target_date: str)
         HabitLog.habit_id == habit_id,
         HabitLog.completed_date == target_date,
     ).first()
+
+
+def batch_get_streaks(db: Session, habit_ids: list[str]) -> dict[str, HabitStreak]:
+    streaks = db.query(HabitStreak).filter(HabitStreak.habit_id.in_(habit_ids)).all()
+    result = {s.habit_id: s for s in streaks}
+    for hid in habit_ids:
+        if hid not in result:
+            streak = HabitStreak(habit_id=hid)
+            db.add(streak)
+            result[hid] = streak
+    if any(hid not in {s.habit_id for s in streaks} for hid in habit_ids):
+        db.commit()
+    return result
+
+
+def batch_is_completed_today(db: Session, habit_ids: list[str]) -> dict[str, bool]:
+    today = date.today().isoformat()
+    logs = db.query(HabitLog.habit_id).filter(
+        HabitLog.habit_id.in_(habit_ids),
+        HabitLog.completed_date == today,
+    ).all()
+    completed_ids = {row[0] for row in logs}
+    return {hid: hid in completed_ids for hid in habit_ids}
 
 
 def get_streak(db: Session, habit_id: str):

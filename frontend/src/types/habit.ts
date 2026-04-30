@@ -70,4 +70,25 @@ export interface HabitStreak {
   currentStreak: number;
   longestStreak: number;
   lastCompletedDate: string | null;
+  updatedAt: string;
+}
+
+export interface HabitStreakRaw {
+  id: string;
+  habit_id: string;
+  current_streak: number;
+  longest_streak: number;
+  last_completed_date: string | null;
+  updated_at: string;
+}
+
+export function mapHabitStreak(raw: HabitStreakRaw): HabitStreak {
+  return {
+    id: raw.id,
+    habitId: raw.habit_id,
+    currentStreak: raw.current_streak,
+    longestStreak: raw.longest_streak,
+    lastCompletedDate: raw.last_completed_date,
+    updatedAt: raw.updated_at,
+  };
 }

@@ -3,7 +3,9 @@ from datetime import datetime
 from pydantic import BaseModel, field_validator
 
 
-def _validate_recurrence_json(v: str) -> str:
+def _validate_recurrence_json(v: str | None) -> str | None:
+    if v is None:
+        return v
     try:
         json.loads(v)
     except (json.JSONDecodeError, TypeError):
@@ -79,5 +81,3 @@ class HabitWithStreak(BaseModel):
     longest_streak: int = 0
     last_completed_date: str | None = None
     completed_today: bool = False
-
-    model_config = {"from_attributes": True}

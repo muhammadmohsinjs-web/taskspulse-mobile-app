@@ -12,6 +12,14 @@ def list_categories(db: Session = Depends(get_db)):
     return service.get_categories(db)
 
 
+@router.get("/{category_id}", response_model=CategoryOut, summary="Get category by ID")
+def read_category(category_id: str, db: Session = Depends(get_db)):
+    cat = service.get_category(db, category_id)
+    if not cat:
+        raise HTTPException(status_code=404, detail="Category not found")
+    return cat
+
+
 @router.post("", response_model=CategoryOut, status_code=status.HTTP_201_CREATED, summary="Create category")
 def create_new_category(category: CategoryCreate, db: Session = Depends(get_db)):
     try:

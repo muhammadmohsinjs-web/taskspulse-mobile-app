@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from database import get_db
+from modules.tasks.schemas import TaskOut
 from modules.goals.schemas import GoalCreate, GoalUpdate, GoalOut, GoalTaskLinkCreate, GoalTaskLinkOut
 from modules.goals import service
 
@@ -45,6 +46,15 @@ def link_task(goal_id: str, link: GoalTaskLinkCreate, db: Session = Depends(get_
     if result is None:
         raise HTTPException(status_code=404, detail="Goal or task not found")
     return result
+
+
+@router.get("/{goal_id}/tasks", response_model=list[TaskOut], summary="List tasks linked to goal")
+def list_goal_tasks(goal_id: str, db: Session = Depends(get_db)):
+    goal = service.get_goal(db, goal_id)
+    if not goal:
+        raise HTTPException(status_code=404, detail="Goal not found")
+    from modules.tasks import service as task_service
+    return task_service.get_tasks(db, goal_id=goal_id)
 
 
 @router.delete("/{goal_id}/tasks/{task_id}", status_code=status.HTTP_204_NO_CONTENT, summary="Unlink task from goal")

@@ -1,16 +1,17 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useMemo } from "react";
 import {
   View,
   Text,
-  FlatList,
+  ScrollView,
   StyleSheet,
-  RefreshControl,
   TouchableOpacity,
   Alert,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { theme } from "../../../theme/theme";
+import { useRefreshControl } from "../../../hooks/useRefreshControl";
+import { getErrorMessage } from "../../../utils/error";
 import { TodayStackParamList } from "../../../types";
 import { useCockpit } from "../hooks/useCockpit";
 import { useToggleHabit } from "../../habits/hooks/useHabits";
@@ -27,26 +28,33 @@ const DailyCockpitScreen: React.FC = () => {
   const { data, isLoading, isError, refetch } = useCockpit();
   const toggleHabit = useToggleHabit();
   const updateTask = useUpdateTask();
-  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const handleRefresh = useCallback(async () => {
-    setIsRefreshing(true);
-    try {
-      await refetch();
-    } finally {
-      setIsRefreshing(false);
-    }
-  }, [refetch]);
+  const { refreshControl } = useRefreshControl({ refetch });
+
+  const habits = data?.habits ?? [];
+  const tasks = data?.tasks ?? [];
+  const globalStreak = data?.globalStreak;
+
+  const maxCurrentStreak = React.useMemo(
+    () => habits.reduce((max: number, h) => Math.max(max, h.currentStreak), 0),
+    [habits]
+  );
+  const maxLongestStreak = React.useMemo(
+    () => habits.reduce((max: number, h) => Math.max(max, h.longestStreak), 0),
+    [habits]
+  );
+
+  const today = new Date();
+  const isEvening = today.getHours() >= 17;
+  const atRiskHabits = isEvening
+    ? habits.filter((h) => !h.completedToday && h.currentStreak >= 3)
+    : [];
 
   const handleHabitToggle = useCallback(
     (habit: CockpitHabit) => {
       toggleHabit.mutate(
         { id: habit.id, completedToday: habit.completedToday },
-        {
-          onError: (e: any) => {
-            Alert.alert("Error", e.message || "Failed to update habit");
-          },
-        }
+        { onError: (e: unknown) => Alert.alert("Error", getErrorMessage(e, "Failed to update habit")) }
       );
     },
     [toggleHabit]
@@ -57,11 +65,7 @@ const DailyCockpitScreen: React.FC = () => {
       const newStatus = task.status === "done" ? "todo" : "done";
       updateTask.mutate(
         { id: task.id, payload: { status: newStatus } },
-        {
-          onError: (e: any) => {
-            Alert.alert("Error", e.message || "Failed to update task");
-          },
-        }
+        { onError: (e: unknown) => Alert.alert("Error", getErrorMessage(e, "Failed to update task")) }
       );
     },
     [updateTask]
@@ -77,156 +81,151 @@ const DailyCockpitScreen: React.FC = () => {
     );
   }
 
-  const { habits, tasks, globalStreak } = data!;
-  const today = new Date();
-  const isEvening = today.getHours() >= 17;
-  const atRiskHabits = isEvening
-    ? habits.filter((h) => !h.completedToday && h.currentStreak >= 3)
-    : [];
+  if (!data) {
+    return (
+      <View style={styles.centered}>
+        <LoadingSpinner message="Preparing cockpit..." />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
-      <FlatList
-        data={[]}
-        renderItem={() => null}
-        ListHeaderComponent={
-          <>
-            {/* Header */}
-            <View style={styles.header}>
-              <Text style={styles.heading}>Today</Text>
-              <Text style={styles.date}>
-                {today.toLocaleDateString("en-US", {
-                  weekday: "long",
-                  month: "long",
-                  day: "numeric",
-                })}
+      <ScrollView
+        contentContainerStyle={styles.listContent}
+        refreshControl={refreshControl}
+        keyboardShouldPersistTaps="handled"
+      >
+        {/* Header */}
+        <View style={styles.header}>
+          <Text style={styles.heading}>Today</Text>
+          <Text style={styles.date}>
+            {today.toLocaleDateString("en-US", {
+              weekday: "long",
+              month: "long",
+              day: "numeric",
+            })}
+          </Text>
+        </View>
+
+        {/* Global Streak */}
+        {habits.length > 0 && globalStreak ? (
+          <View style={styles.streakCard}>
+            <View style={styles.streakInfo}>
+              <Text style={styles.streakLabel}>Daily Progress</Text>
+              <Text style={styles.streakStats}>
+                {globalStreak.completedToday} / {globalStreak.totalHabits} habits
               </Text>
             </View>
+            <View style={styles.streakBadgeWrap}>
+              <StreakBadge
+                currentStreak={maxCurrentStreak}
+                longestStreak={maxLongestStreak}
+              />
+            </View>
+            <ProgressBar
+              progress={globalStreak.completionRate / 100}
+              color={globalStreak.streakActive ? theme.colors.success : theme.colors.primary}
+            />
+          </View>
+        ) : null}
 
-            {/* Global Streak */}
-            {habits.length > 0 ? (
-              <View style={styles.streakCard}>
-                <View style={styles.streakInfo}>
-                  <Text style={styles.streakLabel}>Daily Progress</Text>
-                  <Text style={styles.streakStats}>
-                    {globalStreak.completedToday} / {globalStreak.totalHabits} habits
+        {/* Streak Nudge */}
+        {atRiskHabits.length > 0 && (
+          <View style={styles.nudge}>
+            <Text style={styles.nudgeIcon}>⚡</Text>
+            <Text style={styles.nudgeText}>
+              {atRiskHabits.length} habit{atRiskHabits.length > 1 ? "s" : ""} at risk! Complete before the day ends.
+            </Text>
+          </View>
+        )}
+
+        {/* Habits Section */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Habits</Text>
+            <TouchableOpacity onPress={() => navigation.navigate("HabitsList")}>
+              <Text style={styles.sectionAction}>Manage</Text>
+            </TouchableOpacity>
+          </View>
+
+          {habits.length === 0 ? (
+            <EmptyState
+              icon="🌱"
+              title="No habits yet"
+              subtitle="Create your first habit to start building streaks"
+            />
+          ) : (
+            habits.map((habit) => (
+              <HabitRow
+                key={habit.id}
+                habit={habit}
+                onToggle={() => handleHabitToggle(habit)}
+              />
+            ))
+          )}
+        </View>
+
+        {/* Tasks Section */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Tasks</Text>
+            <TouchableOpacity onPress={() => navigation.navigate("TaskList")}>
+              <Text style={styles.sectionAction}>View All</Text>
+            </TouchableOpacity>
+          </View>
+
+          {tasks.length === 0 ? (
+            <EmptyState
+              icon="📝"
+              title="No tasks for today"
+              subtitle="Add a task to get started"
+            />
+          ) : (
+            tasks.map((task) => (
+              <TouchableOpacity
+                key={task.id}
+                style={styles.taskRow}
+                onPress={() => handleTaskToggle(task)}
+                activeOpacity={0.6}
+              >
+                <View
+                  style={[
+                    styles.taskCheckbox,
+                    task.status === "done" && styles.taskCheckboxDone,
+                  ]}
+                >
+                  <Text style={styles.taskCheckmark}>
+                    {task.status === "done" ? "✓" : "○"}
                   </Text>
                 </View>
-                <View style={styles.streakBadgeWrap}>
-                  <StreakBadge
-                    currentStreak={habits.reduce((max, h) => Math.max(max, h.currentStreak), 0)}
-                    longestStreak={habits.reduce((max, h) => Math.max(max, h.longestStreak), 0)}
-                  />
-                </View>
-                <ProgressBar
-                  progress={globalStreak.completionRate / 100}
-                  color={globalStreak.streakActive ? theme.colors.success : theme.colors.primary}
-                />
-              </View>
-            ) : null}
-
-            {/* Streak Nudge */}
-            {atRiskHabits.length > 0 && (
-              <View style={styles.nudge}>
-                <Text style={styles.nudgeIcon}>⚡</Text>
-                <Text style={styles.nudgeText}>
-                  {atRiskHabits.length} habit{atRiskHabits.length > 1 ? "s" : ""} at risk! Complete before the day ends.
+                <Text
+                  style={[
+                    styles.taskTitle,
+                    task.status === "done" && styles.taskTitleDone,
+                  ]}
+                  numberOfLines={2}
+                >
+                  {task.title}
                 </Text>
-              </View>
-            )}
-
-            {/* Habits Section */}
-            <View style={styles.section}>
-              <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>Habits</Text>
-                <TouchableOpacity onPress={() => navigation.navigate("HabitsList")}>
-                  <Text style={styles.sectionAction}>Manage</Text>
-                </TouchableOpacity>
-              </View>
-
-              {habits.length === 0 ? (
-                <EmptyState
-                  icon="🌱"
-                  title="No habits yet"
-                  subtitle="Create your first habit to start building streaks"
+                <View
+                  style={[
+                    styles.priorityDot,
+                    {
+                      backgroundColor:
+                        task.priority === "urgent"
+                          ? theme.colors.danger
+                          : task.priority === "high"
+                          ? theme.colors.warning
+                          : theme.colors.textMuted,
+                    },
+                  ]}
                 />
-              ) : (
-                habits.map((habit) => (
-                  <HabitRow
-                    key={habit.id}
-                    habit={habit}
-                    onToggle={() => handleHabitToggle(habit)}
-                  />
-                ))
-              )}
-            </View>
-
-            {/* Tasks Section */}
-            <View style={styles.section}>
-              <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>Tasks</Text>
-                <TouchableOpacity onPress={() => navigation.navigate("TaskList")}>
-                  <Text style={styles.sectionAction}>View All</Text>
-                </TouchableOpacity>
-              </View>
-
-              {tasks.length === 0 ? (
-                <EmptyState
-                  icon="📝"
-                  title="No tasks for today"
-                  subtitle="Add a task to get started"
-                />
-              ) : (
-                tasks.map((task) => (
-                  <TouchableOpacity
-                    key={task.id}
-                    style={styles.taskRow}
-                    onPress={() => handleTaskToggle(task)}
-                    activeOpacity={0.6}
-                  >
-                    <View
-                      style={[
-                        styles.taskCheckbox,
-                        task.status === "done" && styles.taskCheckboxDone,
-                      ]}
-                    >
-                      <Text style={styles.taskCheckmark}>
-                        {task.status === "done" ? "✓" : "○"}
-                      </Text>
-                    </View>
-                    <Text
-                      style={[
-                        styles.taskTitle,
-                        task.status === "done" && styles.taskTitleDone,
-                      ]}
-                      numberOfLines={2}
-                    >
-                      {task.title}
-                    </Text>
-                    <View
-                      style={[
-                        styles.priorityDot,
-                        {
-                          backgroundColor:
-                            task.priority === "urgent"
-                              ? theme.colors.danger
-                              : task.priority === "high"
-                              ? theme.colors.warning
-                              : theme.colors.textMuted,
-                        },
-                      ]}
-                    />
-                  </TouchableOpacity>
-                ))
-              )}
-            </View>
-          </>
-        }
-        contentContainerStyle={styles.listContent}
-        refreshControl={
-          <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} colors={[theme.colors.primary]} />
-        }
-      />
+              </TouchableOpacity>
+            ))
+          )}
+        </View>
+      </ScrollView>
     </View>
   );
 };

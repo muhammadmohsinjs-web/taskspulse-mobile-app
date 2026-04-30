@@ -1,3 +1,4 @@
+from datetime import datetime
 from pydantic import BaseModel
 
 
@@ -23,6 +24,7 @@ class GoalTaskLinkOut(BaseModel):
     id: str
     goal_id: str
     task_id: str
+    created_at: datetime
 
     model_config = {"from_attributes": True}
 
@@ -34,8 +36,8 @@ class GoalOut(BaseModel):
     target_date: str | None = None
     color: str
     deleted_at: str | None = None
-    created_at: str
-    updated_at: str
+    created_at: datetime
+    updated_at: datetime
     progress: float = 0.0
     total_tasks: int = 0
     completed_tasks: int = 0

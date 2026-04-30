@@ -1,7 +1,7 @@
 export type { Task, TaskRaw, TaskCreatePayload, TaskUpdatePayload } from "./task";
 export { mapTask } from "./task";
-export type { Habit, HabitRaw, HabitCreatePayload, HabitUpdatePayload, HabitStreak } from "./habit";
-export { mapHabit } from "./habit";
+export type { Habit, HabitRaw, HabitCreatePayload, HabitUpdatePayload, HabitStreak, HabitStreakRaw } from "./habit";
+export { mapHabit, mapHabitStreak } from "./habit";
 export type { Category, CategoryRaw, CategoryCreatePayload, CategoryUpdatePayload } from "./category";
 export { mapCategory } from "./category";
 export type { DailyCockpit, CockpitHabit, CockpitTask, GlobalStreak } from "./cockpit";

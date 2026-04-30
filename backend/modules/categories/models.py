@@ -13,3 +13,4 @@ class Category(Base):
     applies_to = Column(String, nullable=False, default="both")
     deleted_at = Column(String, nullable=True, default=None)
     created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())

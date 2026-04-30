@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { theme } from "../../../theme/theme";
+import { formatShortDate } from "../../../utils/date";
 import ProgressBar from "../../../components/ui/ProgressBar";
 import { Goal } from "../../../types/goal";
 
@@ -26,7 +27,7 @@ const GoalCard: React.FC<GoalCardProps> = ({ goal, onPress, onLongPress }) => (
       <Text style={styles.percent}>{Math.round(goal.progress * 100)}%</Text>
     </View>
     {goal.targetDate ? (
-      <Text style={styles.targetDate}>Target: {goal.targetDate}</Text>
+      <Text style={styles.targetDate}>Target: {formatShortDate(goal.targetDate)}</Text>
     ) : null}
   </TouchableOpacity>
 );

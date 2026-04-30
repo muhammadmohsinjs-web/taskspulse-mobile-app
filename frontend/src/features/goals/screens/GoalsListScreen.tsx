@@ -7,23 +7,28 @@ import {
   TouchableOpacity,
   Alert,
   TextInput,
-  RefreshControl,
 } from "react-native";
-import { theme } from "../../../theme/theme";
+import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { theme, COLORS } from "../../../theme/theme";
+import { useRefreshControl } from "../../../hooks/useRefreshControl";
+import { getErrorMessage } from "../../../utils/error";
+import { isValidDateString } from "../../../utils/date";
 import { useGoals, useCreateGoal, useDeleteGoal } from "../hooks/useGoals";
+import { MoreStackParamList } from "../../../types";
 import GoalCard from "../components/GoalCard";
 import Modal from "../../../components/ui/Modal";
 import Button from "../../../components/ui/Button";
+import FAB from "../../../components/ui/FAB";
 import LoadingSpinner from "../../../components/ui/LoadingSpinner";
 import EmptyState from "../../../components/ui/EmptyState";
 
-const COLORS = ["#4A90D9", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6", "#EC4899", "#06B6D4"];
+type GoalsListNavProp = NativeStackNavigationProp<MoreStackParamList, "GoalsList">;
 
-interface GoalsListScreenProps {
-  navigation: any;
-}
+const DEFAULT_COLOR = theme.colors.primary;
 
-const GoalsListScreen: React.FC<GoalsListScreenProps> = ({ navigation }) => {
+const GoalsListScreen: React.FC = () => {
+  const navigation = useNavigation<GoalsListNavProp>();
   const { data: goals, isLoading, isError, refetch } = useGoals();
   const createGoal = useCreateGoal();
   const deleteGoal = useDeleteGoal();
@@ -32,30 +37,26 @@ const GoalsListScreen: React.FC<GoalsListScreenProps> = ({ navigation }) => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [targetDate, setTargetDate] = useState("");
-  const [selectedColor, setSelectedColor] = useState(COLORS[0]);
+  const [selectedColor, setSelectedColor] = useState(DEFAULT_COLOR);
   const [saving, setSaving] = useState(false);
-  const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const handleRefresh = useCallback(async () => {
-    setIsRefreshing(true);
-    try {
-      await refetch();
-    } finally {
-      setIsRefreshing(false);
-    }
-  }, [refetch]);
+  const { refreshControl } = useRefreshControl({ refetch });
 
   const closeModal = useCallback(() => {
     setModalVisible(false);
     setTitle("");
     setDescription("");
     setTargetDate("");
-    setSelectedColor(COLORS[0]);
+    setSelectedColor(DEFAULT_COLOR);
   }, []);
 
   const handleCreate = useCallback(async () => {
     if (!title.trim()) {
       Alert.alert("Required", "Please enter a goal name");
+      return;
+    }
+    if (!isValidDateString(targetDate)) {
+      Alert.alert("Invalid Date", "Please enter a valid date in YYYY-MM-DD format");
       return;
     }
     setSaving(true);
@@ -67,8 +68,8 @@ const GoalsListScreen: React.FC<GoalsListScreenProps> = ({ navigation }) => {
         color: selectedColor,
       });
       closeModal();
-    } catch (e: any) {
-      Alert.alert("Error", e.message || "Failed to create goal");
+    } catch (e: unknown) {
+      Alert.alert("Error", getErrorMessage(e, "Failed to create goal"));
     } finally {
       setSaving(false);
     }
@@ -83,7 +84,7 @@ const GoalsListScreen: React.FC<GoalsListScreenProps> = ({ navigation }) => {
           style: "destructive",
           onPress: () =>
             deleteGoal.mutate(id, {
-              onError: (e: any) => Alert.alert("Error", e.message || "Failed to delete goal"),
+              onError: (e: unknown) => Alert.alert("Error", getErrorMessage(e, "Failed to delete goal")),
             }),
         },
       ]);
@@ -98,6 +99,8 @@ const GoalsListScreen: React.FC<GoalsListScreenProps> = ({ navigation }) => {
       <FlatList
         data={goals || []}
         keyExtractor={(item) => item.id}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
         renderItem={({ item }) => (
           <GoalCard
             goal={item}
@@ -113,15 +116,10 @@ const GoalsListScreen: React.FC<GoalsListScreenProps> = ({ navigation }) => {
           )
         }
         contentContainerStyle={styles.listContent}
-        refreshControl={
-          <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} colors={[theme.colors.primary]} />
-        }
+        refreshControl={refreshControl}
       />
 
-      {/* FAB */}
-      <TouchableOpacity style={styles.fab} onPress={() => setModalVisible(true)} activeOpacity={0.8}>
-        <Text style={styles.fabText}>+</Text>
-      </TouchableOpacity>
+      <FAB onPress={() => setModalVisible(true)} accessibilityLabel="Add goal" />
 
       {/* Create Modal */}
       <Modal visible={modalVisible} onClose={closeModal} title="New Goal">
@@ -183,20 +181,6 @@ const GoalsListScreen: React.FC<GoalsListScreenProps> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.colors.background },
   listContent: { padding: theme.spacing.lg, paddingBottom: 100 },
-  fab: {
-    position: "absolute",
-    bottom: 24,
-    right: 24,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: theme.colors.primary,
-    justifyContent: "center",
-    alignItems: "center",
-    ...theme.shadow,
-    elevation: 6,
-  },
-  fabText: { color: "#FFF", fontSize: 28, fontWeight: "300", marginTop: -2 },
   label: {
     fontSize: theme.fontSize.sm,
     fontWeight: "600",

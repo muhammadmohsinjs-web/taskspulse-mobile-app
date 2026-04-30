@@ -11,12 +11,17 @@ def get_daily_cockpit(db: Session) -> DailyCockpitOut:
 
     # Active habits
     habits = db.query(Habit).filter(Habit.deleted_at.is_(None)).order_by(Habit.created_at).all()
+    habit_ids = [h.id for h in habits]
+
+    # Batch load streaks and completion status
+    streaks = habit_service.batch_get_streaks(db, habit_ids)
+    completions = habit_service.batch_is_completed_today(db, habit_ids)
 
     cockpit_habits = []
     completed_count = 0
     for h in habits:
-        streak = habit_service.get_streak(db, h.id)
-        is_completed = habit_service.is_habit_completed_today(db, h.id)
+        streak = streaks.get(h.id)
+        is_completed = completions.get(h.id, False)
         if is_completed:
             completed_count += 1
         cockpit_habits.append(
@@ -27,19 +32,20 @@ def get_daily_cockpit(db: Session) -> DailyCockpitOut:
                 category_id=h.category_id,
                 recurrence_rule=h.recurrence_rule,
                 color=h.color,
-                current_streak=streak.current_streak,
-                longest_streak=streak.longest_streak,
-                last_completed_date=streak.last_completed_date,
+                current_streak=streak.current_streak if streak else 0,
+                longest_streak=streak.longest_streak if streak else 0,
+                last_completed_date=streak.last_completed_date if streak else None,
                 completed_today=is_completed,
             )
         )
 
-    # Today's tasks (due today or in progress, not deleted)
+    # Today's tasks (due today and not done, or in progress with no due date, not deleted)
     tasks = (
         db.query(Task)
         .filter(
             Task.deleted_at.is_(None),
-            (Task.due_date == today) | ((Task.due_date.is_(None)) & (Task.status.in_(["todo", "in_progress"]))),
+            ((Task.due_date == today) & (Task.status.in_(["todo", "in_progress"])))
+            | ((Task.due_date.is_(None)) & (Task.status.in_(["todo", "in_progress"]))),
         )
         .order_by(Task.created_at.desc())
         .all()
