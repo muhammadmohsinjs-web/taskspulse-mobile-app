@@ -33,6 +33,24 @@ const CategoriesScreen: React.FC = () => {
   const [selectedColor, setSelectedColor] = useState(COLORS[0]);
   const [appliesTo, setAppliesTo] = useState<"both" | "task" | "habit">("both");
   const [saving, setSaving] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    try {
+      await refetch();
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [refetch]);
+
+  const closeModal = useCallback(() => {
+    setModalVisible(false);
+    setEditingCategory(null);
+    setName("");
+    setSelectedColor(COLORS[0]);
+    setAppliesTo("both");
+  }, []);
 
   const openCreate = () => {
     setEditingCategory(null);
@@ -122,7 +140,7 @@ const CategoriesScreen: React.FC = () => {
         }
         contentContainerStyle={styles.listContent}
         refreshControl={
-          <RefreshControl refreshing={isLoading} onRefresh={refetch} colors={[theme.colors.primary]} />
+          <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} colors={[theme.colors.primary]} />
         }
       />
 
@@ -134,7 +152,7 @@ const CategoriesScreen: React.FC = () => {
       {/* Create/Edit Modal */}
       <Modal
         visible={modalVisible}
-        onClose={() => setModalVisible(false)}
+        onClose={closeModal}
         title={editingCategory ? "Edit Category" : "New Category"}
       >
         <Text style={styles.label}>Name</Text>
@@ -193,7 +211,7 @@ const CategoriesScreen: React.FC = () => {
               }}
             />
           )}
-          <Button title="Cancel" variant="ghost" onPress={() => setModalVisible(false)} />
+          <Button title="Cancel" variant="ghost" onPress={closeModal} />
           <Button title={editingCategory ? "Save" : "Create"} onPress={handleSave} loading={saving} />
         </View>
       </Modal>

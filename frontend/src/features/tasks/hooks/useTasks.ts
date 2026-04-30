@@ -17,6 +17,9 @@ export function useCreateTask() {
       qc.invalidateQueries({ queryKey: ["tasks"] });
       qc.invalidateQueries({ queryKey: ["cockpit"] });
     },
+    onError: (error: Error) => {
+      console.error("Failed to create task:", error.message);
+    },
   });
 }
 
@@ -29,6 +32,9 @@ export function useUpdateTask() {
       qc.invalidateQueries({ queryKey: ["tasks"] });
       qc.invalidateQueries({ queryKey: ["cockpit"] });
     },
+    onError: (error: Error) => {
+      console.error("Failed to update task:", error.message);
+    },
   });
 }
 
@@ -39,6 +45,9 @@ export function useDeleteTask() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["tasks"] });
       qc.invalidateQueries({ queryKey: ["cockpit"] });
+    },
+    onError: (error: Error) => {
+      console.error("Failed to delete task:", error.message);
     },
   });
 }

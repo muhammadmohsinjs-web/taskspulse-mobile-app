@@ -25,6 +25,9 @@ export function useCreateHabit() {
       qc.invalidateQueries({ queryKey: ["habits"] });
       qc.invalidateQueries({ queryKey: ["cockpit"] });
     },
+    onError: (error: Error) => {
+      console.error("Failed to create habit:", error.message);
+    },
   });
 }
 
@@ -37,6 +40,9 @@ export function useUpdateHabit() {
       qc.invalidateQueries({ queryKey: ["habits"] });
       qc.invalidateQueries({ queryKey: ["cockpit"] });
     },
+    onError: (error: Error) => {
+      console.error("Failed to update habit:", error.message);
+    },
   });
 }
 
@@ -47,6 +53,9 @@ export function useDeleteHabit() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["habits"] });
       qc.invalidateQueries({ queryKey: ["cockpit"] });
+    },
+    onError: (error: Error) => {
+      console.error("Failed to delete habit:", error.message);
     },
   });
 }
@@ -64,6 +73,9 @@ export function useToggleHabit() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["habits"] });
       qc.invalidateQueries({ queryKey: ["cockpit"] });
+    },
+    onError: (error: Error) => {
+      console.error("Failed to toggle habit:", error.message);
     },
   });
 }

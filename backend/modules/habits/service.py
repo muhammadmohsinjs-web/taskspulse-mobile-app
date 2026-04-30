@@ -1,7 +1,10 @@
-from datetime import date, datetime, timedelta
+import logging
+from datetime import date, datetime, timezone, timedelta
 from sqlalchemy.orm import Session
 from modules.habits.models import Habit, HabitLog, HabitStreak
 from modules.habits.schemas import HabitCreate, HabitUpdate
+
+logger = logging.getLogger(__name__)
 
 
 def get_habits(db: Session):
@@ -40,7 +43,7 @@ def delete_habit(db: Session, habit_id: str):
     db_habit = db.query(Habit).filter(Habit.id == habit_id, Habit.deleted_at.is_(None)).first()
     if not db_habit:
         return None
-    db_habit.deleted_at = datetime.utcnow().isoformat()
+    db_habit.deleted_at = datetime.now(timezone.utc).isoformat()
     db.commit()
     return db_habit
 
@@ -50,7 +53,11 @@ def complete_habit(db: Session, habit_id: str, completion_date: str | None = Non
     if not habit:
         return None
 
-    completed = completion_date or date.today().isoformat()
+    today_str = date.today().isoformat()
+    completed = completion_date or today_str
+
+    if completed > today_str:
+        raise ValueError("Cannot complete a habit for a future date")
 
     existing = db.query(HabitLog).filter(
         HabitLog.habit_id == habit_id,
@@ -127,6 +134,7 @@ def _recalculate_streak(db: Session, habit_id: str):
 
     if not logs:
         streak.current_streak = 0
+        streak.longest_streak = 0
         streak.last_completed_date = None
         db.commit()
         return

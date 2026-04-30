@@ -81,3 +81,9 @@ When the user asks about UI, UX, design, layout, screen polish, professional loo
 
 - @ui-ux-designer
 - ui-ux-screen-design skill
+
+## Repo Audit Rule
+
+When the user asks to scan, audit, inspect, review, or find bugs in the repository, prefer using:
+
+- @repo-auditor

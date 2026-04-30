@@ -14,6 +14,9 @@ export function useCreateCategory() {
   return useMutation({
     mutationFn: (payload: CategoryCreatePayload) => categoriesApi.create(payload),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["categories"] }),
+    onError: (error: Error) => {
+      console.error("Failed to create category:", error.message);
+    },
   });
 }
 
@@ -23,6 +26,9 @@ export function useUpdateCategory() {
     mutationFn: ({ id, payload }: { id: string; payload: CategoryUpdatePayload }) =>
       categoriesApi.update(id, payload),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["categories"] }),
+    onError: (error: Error) => {
+      console.error("Failed to update category:", error.message);
+    },
   });
 }
 
@@ -31,5 +37,8 @@ export function useDeleteCategory() {
   return useMutation({
     mutationFn: (id: string) => categoriesApi.delete(id),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["categories"] }),
+    onError: (error: Error) => {
+      console.error("Failed to delete category:", error.message);
+    },
   });
 }

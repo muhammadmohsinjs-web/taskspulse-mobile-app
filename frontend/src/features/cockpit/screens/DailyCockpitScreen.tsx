@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useState } from "react";
 import {
   View,
   Text,
@@ -9,7 +9,9 @@ import {
   Alert,
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { theme } from "../../../theme/theme";
+import { TodayStackParamList } from "../../../types";
 import { useCockpit } from "../hooks/useCockpit";
 import { useToggleHabit } from "../../habits/hooks/useHabits";
 import { useUpdateTask } from "../../tasks/hooks/useTasks";
@@ -21,14 +23,31 @@ import EmptyState from "../../../components/ui/EmptyState";
 import { CockpitHabit, CockpitTask } from "../../../types";
 
 const DailyCockpitScreen: React.FC = () => {
-  const navigation = useNavigation<any>();
+  const navigation = useNavigation<NativeStackNavigationProp<TodayStackParamList>>();
   const { data, isLoading, isError, refetch } = useCockpit();
   const toggleHabit = useToggleHabit();
   const updateTask = useUpdateTask();
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    try {
+      await refetch();
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [refetch]);
 
   const handleHabitToggle = useCallback(
     (habit: CockpitHabit) => {
-      toggleHabit.mutate({ id: habit.id, completedToday: habit.completedToday });
+      toggleHabit.mutate(
+        { id: habit.id, completedToday: habit.completedToday },
+        {
+          onError: (e: any) => {
+            Alert.alert("Error", e.message || "Failed to update habit");
+          },
+        }
+      );
     },
     [toggleHabit]
   );
@@ -78,26 +97,26 @@ const DailyCockpitScreen: React.FC = () => {
             </View>
 
             {/* Global Streak */}
-            <View style={styles.streakCard}>
-              <View style={styles.streakInfo}>
-                <Text style={styles.streakLabel}>Daily Progress</Text>
-                <Text style={styles.streakStats}>
-                  {globalStreak.completedToday} / {globalStreak.totalHabits} habits
-                </Text>
-              </View>
-              {habits.length > 0 && (
+            {habits.length > 0 ? (
+              <View style={styles.streakCard}>
+                <View style={styles.streakInfo}>
+                  <Text style={styles.streakLabel}>Daily Progress</Text>
+                  <Text style={styles.streakStats}>
+                    {globalStreak.completedToday} / {globalStreak.totalHabits} habits
+                  </Text>
+                </View>
                 <View style={styles.streakBadgeWrap}>
                   <StreakBadge
                     currentStreak={habits.reduce((max, h) => Math.max(max, h.currentStreak), 0)}
                     longestStreak={habits.reduce((max, h) => Math.max(max, h.longestStreak), 0)}
                   />
                 </View>
-              )}
-              <ProgressBar
-                progress={globalStreak.completionRate / 100}
-                color={globalStreak.streakActive ? theme.colors.success : theme.colors.primary}
-              />
-            </View>
+                <ProgressBar
+                  progress={globalStreak.completionRate / 100}
+                  color={globalStreak.streakActive ? theme.colors.success : theme.colors.primary}
+                />
+              </View>
+            ) : null}
 
             {/* Streak Nudge */}
             {atRiskHabits.length > 0 && (
@@ -198,7 +217,7 @@ const DailyCockpitScreen: React.FC = () => {
         }
         contentContainerStyle={styles.listContent}
         refreshControl={
-          <RefreshControl refreshing={isLoading} onRefresh={refetch} colors={[theme.colors.primary]} />
+          <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} colors={[theme.colors.primary]} />
         }
       />
     </View>

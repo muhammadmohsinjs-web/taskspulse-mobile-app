@@ -14,12 +14,18 @@ def list_categories(db: Session = Depends(get_db)):
 
 @router.post("", response_model=CategoryOut, status_code=status.HTTP_201_CREATED, summary="Create category")
 def create_new_category(category: CategoryCreate, db: Session = Depends(get_db)):
-    return service.create_category(db, category)
+    try:
+        return service.create_category(db, category)
+    except ValueError as e:
+        raise HTTPException(status_code=409, detail=str(e))
 
 
 @router.put("/{category_id}", response_model=CategoryOut, summary="Update category")
 def update_existing_category(category_id: str, category: CategoryUpdate, db: Session = Depends(get_db)):
-    updated = service.update_category(db, category_id, category)
+    try:
+        updated = service.update_category(db, category_id, category)
+    except ValueError as e:
+        raise HTTPException(status_code=409, detail=str(e))
     if not updated:
         raise HTTPException(status_code=404, detail="Category not found")
     return updated

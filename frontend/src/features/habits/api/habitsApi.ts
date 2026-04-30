@@ -1,4 +1,5 @@
 import { apiClient } from "../../../services/apiClient";
+import { toSnakeCase } from "../../../services/mappers";
 import { HabitRaw, Habit, mapHabit, HabitCreatePayload, HabitUpdatePayload, HabitStreak } from "../../../types/habit";
 
 export const habitsApi = {
@@ -13,22 +14,13 @@ export const habitsApi = {
   },
 
   create: async (payload: HabitCreatePayload): Promise<Habit> => {
-    const body: Record<string, unknown> = { title: payload.title };
-    if (payload.description) body.description = payload.description;
-    if (payload.categoryId) body.category_id = payload.categoryId;
-    if (payload.recurrenceRule) body.recurrence_rule = payload.recurrenceRule;
-    if (payload.color) body.color = payload.color;
+    const body = toSnakeCase(payload as Record<string, unknown>);
     const data = await apiClient.post<HabitRaw>("/habits", body);
     return mapHabit(data);
   },
 
   update: async (id: string, payload: HabitUpdatePayload): Promise<Habit> => {
-    const body: Record<string, unknown> = {};
-    if (payload.title !== undefined) body.title = payload.title;
-    if (payload.description !== undefined) body.description = payload.description;
-    if (payload.categoryId !== undefined) body.category_id = payload.categoryId;
-    if (payload.recurrenceRule !== undefined) body.recurrence_rule = payload.recurrenceRule;
-    if (payload.color !== undefined) body.color = payload.color;
+    const body = toSnakeCase(payload as Record<string, unknown>);
     const data = await apiClient.put<HabitRaw>(`/habits/${id}`, body);
     return mapHabit(data);
   },

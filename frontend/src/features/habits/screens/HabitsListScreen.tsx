@@ -35,6 +35,24 @@ const HabitsListScreen: React.FC = () => {
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
   const [selectedColor, setSelectedColor] = useState(COLORS[0]);
   const [saving, setSaving] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefresh = useCallback(async () => {
+    setIsRefreshing(true);
+    try {
+      await refetch();
+    } finally {
+      setIsRefreshing(false);
+    }
+  }, [refetch]);
+
+  const closeModal = useCallback(() => {
+    setModalVisible(false);
+    setTitle("");
+    setDescription("");
+    setSelectedCategoryId(null);
+    setSelectedColor(COLORS[0]);
+  }, []);
 
   const handleCreate = useCallback(async () => {
     if (!title.trim()) {
@@ -94,7 +112,7 @@ const HabitsListScreen: React.FC = () => {
         }
         contentContainerStyle={styles.listContent}
         refreshControl={
-          <RefreshControl refreshing={isLoading} onRefresh={refetch} colors={[theme.colors.primary]} />
+          <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} colors={[theme.colors.primary]} />
         }
       />
 
@@ -104,7 +122,7 @@ const HabitsListScreen: React.FC = () => {
       </TouchableOpacity>
 
       {/* Create Modal */}
-      <Modal visible={modalVisible} onClose={() => setModalVisible(false)} title="New Habit">
+      <Modal visible={modalVisible} onClose={closeModal} title="New Habit">
         <Text style={styles.label}>Name</Text>
         <TextInput
           style={styles.input}
@@ -154,7 +172,7 @@ const HabitsListScreen: React.FC = () => {
         </View>
 
         <View style={styles.modalActions}>
-          <Button title="Cancel" variant="ghost" onPress={() => setModalVisible(false)} />
+          <Button title="Cancel" variant="ghost" onPress={closeModal} />
           <Button title="Create Habit" onPress={handleCreate} loading={saving} />
         </View>
       </Modal>

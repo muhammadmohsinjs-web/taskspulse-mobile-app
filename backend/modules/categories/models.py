@@ -1,10 +1,6 @@
-import uuid
 from sqlalchemy import Column, String, DateTime, func
 from database import Base
-
-
-def generate_uuid():
-    return str(uuid.uuid4())
+from modules.utils import generate_uuid
 
 
 class Category(Base):
@@ -15,4 +11,5 @@ class Category(Base):
     color = Column(String, nullable=False, default="#4A90D9")
     icon = Column(String, default="folder")
     applies_to = Column(String, nullable=False, default="both")
+    deleted_at = Column(String, nullable=True, default=None)
     created_at = Column(DateTime, server_default=func.now())

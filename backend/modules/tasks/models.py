@@ -1,10 +1,6 @@
-import uuid
 from sqlalchemy import Column, String, Boolean, DateTime, func
 from database import Base
-
-
-def generate_uuid():
-    return str(uuid.uuid4())
+from modules.utils import generate_uuid
 
 
 class Task(Base):

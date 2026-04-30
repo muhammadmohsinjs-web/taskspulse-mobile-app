@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy.orm import Session
 from modules.tasks.models import Task
 from modules.tasks.schemas import TaskCreate, TaskUpdate
@@ -11,7 +11,6 @@ def get_tasks(
     date: str | None = None,
     status: str | None = None,
     category_id: str | None = None,
-    goal_id: str | None = None,
 ):
     query = db.query(Task).filter(Task.deleted_at.is_(None))
     if date:
@@ -20,8 +19,6 @@ def get_tasks(
         query = query.filter(Task.status == status)
     if category_id:
         query = query.filter(Task.category_id == category_id)
-    if goal_id is not None:
-        query = query.filter(Task.goal_id == goal_id)
     return query.order_by(Task.created_at.desc()).offset(skip).limit(limit).all()
 
 
@@ -44,7 +41,7 @@ def update_task(db: Session, task_id: str, task: TaskUpdate):
     update_data = task.model_dump(exclude_unset=True)
     if "status" in update_data:
         if update_data["status"] == "done" and db_task.status != "done":
-            update_data["completed_at"] = datetime.utcnow().isoformat()
+            update_data["completed_at"] = datetime.now(timezone.utc).isoformat()
         elif update_data["status"] != "done":
             update_data["completed_at"] = None
     for key, value in update_data.items():
@@ -58,6 +55,6 @@ def delete_task(db: Session, task_id: str):
     db_task = db.query(Task).filter(Task.id == task_id, Task.deleted_at.is_(None)).first()
     if not db_task:
         return None
-    db_task.deleted_at = datetime.utcnow().isoformat()
+    db_task.deleted_at = datetime.now(timezone.utc).isoformat()
     db.commit()
     return db_task

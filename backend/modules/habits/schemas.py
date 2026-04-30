@@ -1,5 +1,14 @@
+import json
 from datetime import datetime
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
+
+
+def _validate_recurrence_json(v: str) -> str:
+    try:
+        json.loads(v)
+    except (json.JSONDecodeError, TypeError):
+        raise ValueError("recurrence_rule must be a valid JSON string")
+    return v
 
 
 class HabitCreate(BaseModel):
@@ -9,6 +18,8 @@ class HabitCreate(BaseModel):
     recurrence_rule: str = '{"type":"daily"}'
     color: str = "#4A90D9"
 
+    _validate_recurrence = field_validator("recurrence_rule")(_validate_recurrence_json)
+
 
 class HabitUpdate(BaseModel):
     title: str | None = None
@@ -16,6 +27,8 @@ class HabitUpdate(BaseModel):
     category_id: str | None = None
     recurrence_rule: str | None = None
     color: str | None = None
+
+    _validate_recurrence = field_validator("recurrence_rule")(_validate_recurrence_json)
 
 
 class HabitOut(BaseModel):

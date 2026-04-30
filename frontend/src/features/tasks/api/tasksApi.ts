@@ -1,4 +1,5 @@
 import { apiClient } from "../../../services/apiClient";
+import { toSnakeCase } from "../../../services/mappers";
 import { TaskRaw, Task, mapTask, TaskCreatePayload, TaskUpdatePayload } from "../../../types/task";
 
 export const tasksApi = {
@@ -18,26 +19,13 @@ export const tasksApi = {
   },
 
   create: async (payload: TaskCreatePayload): Promise<Task> => {
-    const body: Record<string, unknown> = { title: payload.title };
-    if (payload.description) body.description = payload.description;
-    if (payload.status) body.status = payload.status;
-    if (payload.priority) body.priority = payload.priority;
-    if (payload.dueDate !== undefined) body.due_date = payload.dueDate;
-    if (payload.categoryId !== undefined) body.category_id = payload.categoryId;
-    if (payload.recurrenceRule !== undefined) body.recurrence_rule = payload.recurrenceRule;
+    const body = toSnakeCase(payload as Record<string, unknown>);
     const data = await apiClient.post<TaskRaw>("/tasks", body);
     return mapTask(data);
   },
 
   update: async (id: string, payload: TaskUpdatePayload): Promise<Task> => {
-    const body: Record<string, unknown> = {};
-    if (payload.title !== undefined) body.title = payload.title;
-    if (payload.description !== undefined) body.description = payload.description;
-    if (payload.status !== undefined) body.status = payload.status;
-    if (payload.priority !== undefined) body.priority = payload.priority;
-    if (payload.dueDate !== undefined) body.due_date = payload.dueDate;
-    if (payload.categoryId !== undefined) body.category_id = payload.categoryId;
-    if (payload.recurrenceRule !== undefined) body.recurrence_rule = payload.recurrenceRule;
+    const body = toSnakeCase(payload as Record<string, unknown>);
     const data = await apiClient.put<TaskRaw>(`/tasks/${id}`, body);
     return mapTask(data);
   },
