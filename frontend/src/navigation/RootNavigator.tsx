@@ -8,6 +8,8 @@ import DailyCockpitScreen from "../features/cockpit/screens/DailyCockpitScreen";
 import HabitsListScreen from "../features/habits/screens/HabitsListScreen";
 import CategoriesScreen from "../features/categories/screens/CategoriesScreen";
 import TaskListScreen from "../features/tasks/screens/TaskListScreen";
+import GoalsListScreen from "../features/goals/screens/GoalsListScreen";
+import GoalDetailScreen from "../features/goals/screens/GoalDetailScreen";
 
 const Tab = createBottomTabNavigator();
 const MoreStack = createNativeStackNavigator();
@@ -51,10 +53,28 @@ const MoreStackNavigator = () => (
       }}
     />
     <MoreStack.Screen
+      name="GoalsList"
+      component={GoalsListScreen}
+      options={{
+        headerTitle: "Goals",
+        headerTintColor: theme.colors.primary,
+        headerStyle: { backgroundColor: theme.colors.background },
+      }}
+    />
+    <MoreStack.Screen
       name="HabitsList"
       component={HabitsListScreen}
       options={{
         headerTitle: "Habits",
+        headerTintColor: theme.colors.primary,
+        headerStyle: { backgroundColor: theme.colors.background },
+      }}
+    />
+    <MoreStack.Screen
+      name="GoalDetail"
+      component={GoalDetailScreen}
+      options={{
+        headerTitle: "Goal",
         headerTintColor: theme.colors.primary,
         headerStyle: { backgroundColor: theme.colors.background },
       }}

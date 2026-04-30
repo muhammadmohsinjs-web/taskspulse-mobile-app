@@ -6,4 +6,6 @@ export type { Category, CategoryRaw, CategoryCreatePayload, CategoryUpdatePayloa
 export { mapCategory } from "./category";
 export type { DailyCockpit, CockpitHabit, CockpitTask, GlobalStreak } from "./cockpit";
 export { mapCockpit } from "./cockpit";
+export type { Goal, GoalRaw, GoalCreatePayload, GoalUpdatePayload, GoalTaskLink, GoalTaskLinkRaw } from "./goal";
+export { mapGoal, mapGoalTaskLink } from "./goal";
 export type { TodayStackParamList, MoreStackParamList, RootTabParamList } from "./navigation";

@@ -6,7 +6,9 @@ export type TodayStackParamList = {
 
 export type MoreStackParamList = {
   Categories: undefined;
+  GoalsList: undefined;
   HabitsList: undefined;
+  GoalDetail: { goalId: string };
 };
 
 export type RootTabParamList = {

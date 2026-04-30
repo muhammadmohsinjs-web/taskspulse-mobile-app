@@ -3,11 +3,12 @@ import { toSnakeCase } from "../../../services/mappers";
 import { TaskRaw, Task, mapTask, TaskCreatePayload, TaskUpdatePayload } from "../../../types/task";
 
 export const tasksApi = {
-  getAll: async (params?: { date?: string; status?: string; categoryId?: string }): Promise<Task[]> => {
+  getAll: async (params?: { date?: string; status?: string; categoryId?: string; goalId?: string }): Promise<Task[]> => {
     const query = new URLSearchParams();
     if (params?.date) query.set("date", params.date);
     if (params?.status) query.set("status", params.status);
     if (params?.categoryId) query.set("category_id", params.categoryId);
+    if (params?.goalId) query.set("goal_id", params.goalId);
     const qs = query.toString();
     const data = await apiClient.get<TaskRaw[]>(`/tasks${qs ? "?" + qs : ""}`);
     return data.map(mapTask);
