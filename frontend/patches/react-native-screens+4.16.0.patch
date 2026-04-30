@@ -1,0 +1,31 @@
+diff --git a/node_modules/react-native-screens/lib/commonjs/components/Screen.js b/node_modules/react-native-screens/lib/commonjs/components/Screen.js
+index e3887b8..c498267 100644
+--- a/node_modules/react-native-screens/lib/commonjs/components/Screen.js
++++ b/node_modules/react-native-screens/lib/commonjs/components/Screen.js
+@@ -89,7 +89,7 @@ const InnerScreen = exports.InnerScreen = /*#__PURE__*/_react.default.forwardRef
+     } = rest;
+     if (active !== undefined && activityState === undefined) {
+       console.warn('It appears that you are using old version of react-navigation library. Please update @react-navigation/bottom-tabs, @react-navigation/stack and @react-navigation/drawer to version 5.10.0 or above to take full advantage of new functionality added to react-native-screens');
+-      activityState = active !== 0 ? 2 : 0; // in the new version, we need one of the screens to have value of 2 after the transition
++      const _activeNum = Number(active); activityState = !isNaN(_activeNum) && _activeNum !== 0 ? 2 : 0; // in the new version, we need one of the screens to have value of 2 after the transition
+     }
+     if (isNativeStack && prevActivityState !== undefined && activityState !== undefined) {
+       if (prevActivityState > activityState) {
+@@ -138,7 +138,7 @@ const InnerScreen = exports.InnerScreen = /*#__PURE__*/_react.default.forwardRef
+       style: [style, {
+         zIndex: undefined
+       }],
+-      activityState: activityState,
++      activityState: Number(activityState) || 0,
+       screenId: screenId,
+       sheetAllowedDetents: resolvedSheetAllowedDetents,
+       sheetLargestUndimmedDetent: resolvedSheetLargestUndimmedDetent,
+@@ -186,7 +186,7 @@ const InnerScreen = exports.InnerScreen = /*#__PURE__*/_react.default.forwardRef
+       ...props
+     } = rest;
+     if (active !== undefined && activityState === undefined) {
+-      activityState = active !== 0 ? 2 : 0;
++      const _activeNum = Number(active); activityState = !isNaN(_activeNum) && _activeNum !== 0 ? 2 : 0;
+     }
+     return /*#__PURE__*/_react.default.createElement(_reactNative.Animated.View, _extends({
+       style: [style, {

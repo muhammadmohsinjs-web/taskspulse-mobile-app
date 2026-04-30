@@ -1,0 +1,218 @@
+import React, { useState, useCallback } from "react";
+import {
+  View,
+  Text,
+  FlatList,
+  StyleSheet,
+  TouchableOpacity,
+  Alert,
+  TextInput,
+  RefreshControl,
+} from "react-native";
+import { theme } from "../../../theme/theme";
+import { useHabits, useCreateHabit, useToggleHabit, useDeleteHabit } from "../hooks/useHabits";
+import { useCategories } from "../../categories/hooks/useCategories";
+import HabitRow from "../components/HabitRow";
+import Modal from "../../../components/ui/Modal";
+import Button from "../../../components/ui/Button";
+import LoadingSpinner from "../../../components/ui/LoadingSpinner";
+import EmptyState from "../../../components/ui/EmptyState";
+import CategoryChip from "../../categories/components/CategoryChip";
+import { Category } from "../../../types";
+
+const COLORS = ["#4A90D9", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6", "#EC4899", "#06B6D4"];
+
+const HabitsListScreen: React.FC = () => {
+  const { data: habits, isLoading, isError, refetch } = useHabits();
+  const { data: categories } = useCategories();
+  const createHabit = useCreateHabit();
+  const toggleHabit = useToggleHabit();
+  const deleteHabit = useDeleteHabit();
+
+  const [modalVisible, setModalVisible] = useState(false);
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
+  const [selectedColor, setSelectedColor] = useState(COLORS[0]);
+  const [saving, setSaving] = useState(false);
+
+  const handleCreate = useCallback(async () => {
+    if (!title.trim()) {
+      Alert.alert("Required", "Please enter a habit name");
+      return;
+    }
+    setSaving(true);
+    try {
+      await createHabit.mutateAsync({
+        title: title.trim(),
+        description: description.trim(),
+        categoryId: selectedCategoryId,
+        color: selectedColor,
+      });
+      setTitle("");
+      setDescription("");
+      setSelectedCategoryId(null);
+      setSelectedColor(COLORS[0]);
+      setModalVisible(false);
+    } catch (e: any) {
+      Alert.alert("Error", e.message || "Failed to create habit");
+    } finally {
+      setSaving(false);
+    }
+  }, [title, description, selectedCategoryId, selectedColor, createHabit]);
+
+  const handleDelete = useCallback(
+    (id: string) => {
+      Alert.alert("Delete Habit", "Are you sure? Streak data will be lost.", [
+        { text: "Cancel", style: "cancel" },
+        { text: "Delete", style: "destructive", onPress: () => deleteHabit.mutate(id) },
+      ]);
+    },
+    [deleteHabit]
+  );
+
+  if (isLoading) return <LoadingSpinner message="Loading habits..." />;
+
+  return (
+    <View style={styles.container}>
+      <FlatList
+        data={habits || []}
+        keyExtractor={(item) => item.id}
+        renderItem={({ item }) => (
+          <HabitRow
+            habit={item}
+            onToggle={() => toggleHabit.mutate({ id: item.id, completedToday: item.completedToday })}
+            onLongPress={() => handleDelete(item.id)}
+          />
+        )}
+        ListEmptyComponent={
+          isError ? (
+            <EmptyState icon="⚠️" title="Couldn't load habits" subtitle="Pull down to retry" />
+          ) : (
+            <EmptyState icon="🌱" title="No habits yet" subtitle="Tap + to create your first habit" />
+          )
+        }
+        contentContainerStyle={styles.listContent}
+        refreshControl={
+          <RefreshControl refreshing={isLoading} onRefresh={refetch} colors={[theme.colors.primary]} />
+        }
+      />
+
+      {/* FAB */}
+      <TouchableOpacity style={styles.fab} onPress={() => setModalVisible(true)} activeOpacity={0.8}>
+        <Text style={styles.fabText}>+</Text>
+      </TouchableOpacity>
+
+      {/* Create Modal */}
+      <Modal visible={modalVisible} onClose={() => setModalVisible(false)} title="New Habit">
+        <Text style={styles.label}>Name</Text>
+        <TextInput
+          style={styles.input}
+          value={title}
+          onChangeText={setTitle}
+          placeholder="e.g. Morning meditation"
+          placeholderTextColor={theme.colors.textMuted}
+          autoFocus
+        />
+
+        <Text style={styles.label}>Description (optional)</Text>
+        <TextInput
+          style={styles.input}
+          value={description}
+          onChangeText={setDescription}
+          placeholder="What does this habit involve?"
+          placeholderTextColor={theme.colors.textMuted}
+        />
+
+        <Text style={styles.label}>Category (optional)</Text>
+        <View style={styles.chipRow}>
+          {categories?.map((cat: Category) => (
+            <CategoryChip
+              key={cat.id}
+              category={cat}
+              selected={selectedCategoryId === cat.id}
+              onPress={() =>
+                setSelectedCategoryId(selectedCategoryId === cat.id ? null : cat.id)
+              }
+            />
+          ))}
+        </View>
+
+        <Text style={styles.label}>Color</Text>
+        <View style={styles.colorRow}>
+          {COLORS.map((c) => (
+            <TouchableOpacity
+              key={c}
+              style={[
+                styles.colorDot,
+                { backgroundColor: c },
+                selectedColor === c && styles.colorDotSelected,
+              ]}
+              onPress={() => setSelectedColor(c)}
+            />
+          ))}
+        </View>
+
+        <View style={styles.modalActions}>
+          <Button title="Cancel" variant="ghost" onPress={() => setModalVisible(false)} />
+          <Button title="Create Habit" onPress={handleCreate} loading={saving} />
+        </View>
+      </Modal>
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: theme.colors.background },
+  listContent: { padding: theme.spacing.lg, paddingBottom: 100 },
+  fab: {
+    position: "absolute",
+    bottom: 24,
+    right: 24,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: theme.colors.primary,
+    justifyContent: "center",
+    alignItems: "center",
+    ...theme.shadow,
+    elevation: 6,
+  },
+  fabText: { color: "#FFF", fontSize: 28, fontWeight: "300", marginTop: -2 },
+  label: {
+    fontSize: theme.fontSize.sm,
+    fontWeight: "600",
+    color: theme.colors.textPrimary,
+    marginBottom: theme.spacing.xs,
+    marginTop: theme.spacing.md,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+    borderRadius: theme.borderRadius.md,
+    paddingHorizontal: theme.spacing.md,
+    paddingVertical: theme.spacing.sm,
+    fontSize: theme.fontSize.md,
+    color: theme.colors.textPrimary,
+    backgroundColor: theme.colors.background,
+  },
+  chipRow: { flexDirection: "row", flexWrap: "wrap", marginBottom: theme.spacing.sm },
+  colorRow: { flexDirection: "row", flexWrap: "wrap", gap: theme.spacing.sm },
+  colorDot: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+  },
+  colorDotSelected: {
+    borderWidth: 3,
+    borderColor: theme.colors.textPrimary,
+  },
+  modalActions: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    gap: theme.spacing.sm,
+    marginTop: theme.spacing.xl,
+  },
+});
+
+export default HabitsListScreen;

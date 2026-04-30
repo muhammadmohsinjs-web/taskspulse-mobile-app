@@ -2,7 +2,7 @@
   "expo": {
     "name": "TasksPulse",
     "slug": "taskspulse",
-    "version": "1.0.0",
+    "version": "0.1.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -10,21 +10,24 @@
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#1A1A2E"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.taskspulse.app"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#1A1A2E"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "package": "com.taskspulse.app"
     },
     "web": {
+      "bundler": "metro",
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": []
   }
 }

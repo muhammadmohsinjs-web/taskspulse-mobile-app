@@ -47,3 +47,37 @@ Always end responses with:
 - Any risk, assumption, or thing to verify
 
 Keep the summary concise, beginner-friendly, and useful.
+
+## Debugging Rule
+
+When the user asks to debug, fix an issue, investigate an error, resolve a bug, analyze a failed build, fix failing tests, or trace a runtime problem, prefer using:
+
+- @debugger
+- debugging-workflow skill
+
+Debugging must follow this order:
+
+1. Understand the problem.
+2. Read the exact error/log/stack trace.
+3. Inspect related files.
+4. Find the root cause.
+5. Apply the smallest safe fix.
+6. Run relevant verification.
+7. Report root cause, files changed, fix, test command, and remaining risks.
+
+Do not randomly rewrite code.
+Do not perform large refactors while debugging unless explicitly requested.
+
+## Fullstack Coding Rule
+
+When the user asks to build, implement, code, add, or update a fullstack feature, prefer using:
+
+- @fullstack-builder
+- fullstack-feature-builder skill
+
+## UI/UX Design Rule
+
+When the user asks about UI, UX, design, layout, screen polish, professional look, consistency, app design, mobile experience, components, spacing, typography, colors, or visual improvements, prefer using:
+
+- @ui-ux-designer
+- ui-ux-screen-design skill
