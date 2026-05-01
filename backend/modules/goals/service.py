@@ -51,6 +51,8 @@ def _goal_to_out(db: Session, goal: Goal) -> GoalOut:
         target_date=goal.target_date,
         color=goal.color,
         deleted_at=goal.deleted_at,
+        created_at=goal.created_at,
+        updated_at=goal.updated_at,
         progress=progress,
         total_tasks=total,
         completed_tasks=completed,
@@ -71,6 +73,8 @@ def get_goals(db: Session) -> list[GoalOut]:
             target_date=g.target_date,
             color=g.color,
             deleted_at=g.deleted_at,
+            created_at=g.created_at,
+            updated_at=g.updated_at,
             progress=p,
             total_tasks=total,
             completed_tasks=completed,
@@ -114,23 +118,23 @@ def delete_goal(db: Session, goal_id: str) -> bool:
     return True
 
 
-def link_task_to_goal(db: Session, goal_id: str, task_id: str) -> GoalTaskLink | None:
+def link_task_to_goal(db: Session, goal_id: str, task_id: str) -> tuple[GoalTaskLink | None, bool]:
     goal = db.query(Goal).filter(Goal.id == goal_id, Goal.deleted_at.is_(None)).first()
     if not goal:
-        return None
+        return None, False
     task = db.query(Task).filter(Task.id == task_id, Task.deleted_at.is_(None)).first()
     if not task:
-        return None
+        return None, False
     existing = db.query(GoalTaskLink).filter(
         GoalTaskLink.goal_id == goal_id, GoalTaskLink.task_id == task_id
     ).first()
     if existing:
-        return existing
+        return existing, True
     link = GoalTaskLink(goal_id=goal_id, task_id=task_id)
     db.add(link)
     db.commit()
     db.refresh(link)
-    return link
+    return link, False
 
 
 def unlink_task_from_goal(db: Session, goal_id: str, task_id: str) -> bool:

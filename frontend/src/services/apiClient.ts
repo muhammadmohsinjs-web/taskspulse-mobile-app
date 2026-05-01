@@ -67,6 +67,9 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
     if (e instanceof Error && e.name === "AbortError") {
       throw new Error("Request timed out. Is the backend running?");
     }
+    if (controller.signal.aborted) {
+      throw new Error("Request timed out. Is the backend running?");
+    }
     throw e;
   } finally {
     clearTimeout(timer);

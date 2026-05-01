@@ -3,7 +3,9 @@ export function formatShortDate(iso: string): string {
     const d = new Date(iso);
     if (isNaN(d.getTime())) return iso;
     const now = new Date();
-    const diffDays = Math.ceil((d.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    const dStart = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    const nowStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const diffDays = Math.round((dStart.getTime() - nowStart.getTime()) / (1000 * 60 * 60 * 24));
     if (diffDays === 0) return "Today";
     if (diffDays === 1) return "Tomorrow";
     if (diffDays === -1) return "Yesterday";

@@ -157,17 +157,18 @@ def auto_balance(db: Session, week_start_str: str, max_tasks_per_day: int) -> Au
 
         for j in range(1, 8):
             target_day = current_day + timedelta(days=j)
-            if target_day < current_day:
-                target_day = current_day - timedelta(days=j)
 
             target_tasks = _get_tasks_for_day(db, target_day)
-            if len(target_tasks) < max_tasks_per_day:
-                for task in excess:
-                    if len(_get_tasks_for_day(db, target_day)) >= max_tasks_per_day:
-                        break
-                    task.due_date = _iso(target_day)
-                    moved_count += 1
-                    excess = [t for t in excess if t.id != task.id]
+            slots_available = max_tasks_per_day - len(target_tasks)
+            if slots_available <= 0:
+                continue
+            for task in excess:
+                if slots_available <= 0:
+                    break
+                task.due_date = _iso(target_day)
+                moved_count += 1
+                slots_available -= 1
+                excess = [t for t in excess if t.id != task.id]
 
     db.commit()
 
@@ -198,6 +199,9 @@ def carry_forward(db: Session, target_week_start: str) -> CarryForwardResponse:
     today = date.today()
     today_iso = _iso(today)
     target_start = date.fromisoformat(target_week_start)
+
+    if target_start < today:
+        raise ValueError("target_week_start must be today or in the future")
 
     overdue = (
         db.query(Task)

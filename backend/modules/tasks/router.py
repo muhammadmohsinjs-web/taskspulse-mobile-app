@@ -7,6 +7,14 @@ from modules.tasks import service
 router = APIRouter()
 
 
+def _validate_task_filters(task_ids: list[str] | None, month: str | None, is_backlog: bool, date: str | None):
+    active = sum(1 for f in [task_ids, month, date] if f is not None)
+    if is_backlog:
+        active += 1
+    if active > 1:
+        raise HTTPException(status_code=400, detail="Filter parameters (task_ids, month, is_backlog, date) are mutually exclusive")
+
+
 @router.get("", response_model=list[TaskOut], summary="List tasks")
 def list_tasks(
     skip: int = Query(0, ge=0),
@@ -18,6 +26,7 @@ def list_tasks(
     is_backlog: bool = Query(False, description="Filter tasks with no due_date (backlog)"),
     db: Session = Depends(get_db),
 ):
+    _validate_task_filters(None, month, is_backlog, date)
     return service.get_tasks(db, skip=skip, limit=limit, date=date, month=month, status=status, category_id=category_id, is_backlog=is_backlog)
 
 

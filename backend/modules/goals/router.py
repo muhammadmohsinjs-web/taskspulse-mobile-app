@@ -41,11 +41,13 @@ def delete_existing_goal(goal_id: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Goal not found")
 
 
-@router.post("/{goal_id}/tasks", response_model=GoalTaskLinkOut, status_code=status.HTTP_201_CREATED, summary="Link task to goal")
+@router.post("/{goal_id}/tasks", response_model=GoalTaskLinkOut, summary="Link task to goal")
 def link_task(goal_id: str, link: GoalTaskLinkCreate, db: Session = Depends(get_db)):
-    result = service.link_task_to_goal(db, goal_id, link.task_id)
+    result, already_exists = service.link_task_to_goal(db, goal_id, link.task_id)
     if result is None:
         raise HTTPException(status_code=404, detail="Goal or task not found")
+    if already_exists:
+        raise HTTPException(status_code=409, detail="Task is already linked to this goal")
     return result
 
 
@@ -58,7 +60,7 @@ def list_goal_tasks(goal_id: str, db: Session = Depends(get_db)):
     task_ids = [link.task_id for link in links]
     if not task_ids:
         return []
-    return task_service.get_tasks(db, task_ids=task_ids)
+    return task_service.get_tasks(db, task_ids=task_ids, limit=500)
 
 
 @router.delete("/{goal_id}/tasks/{task_id}", status_code=status.HTTP_204_NO_CONTENT, summary="Unlink task from goal")

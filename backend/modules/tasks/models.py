@@ -9,6 +9,7 @@ class Task(Base):
         Index("idx_tasks_category_id", "category_id"),
         Index("idx_tasks_status", "status"),
         Index("idx_tasks_due_date", "due_date"),
+        Index("idx_tasks_deleted_at", "deleted_at"),
     )
 
     id = Column(String, primary_key=True, default=generate_uuid)

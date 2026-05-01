@@ -221,7 +221,10 @@ def get_analytics_summary(db: Session) -> AnalyticsSummaryOut:
 
 def get_heatmap(db: Session, months: int = 3) -> HeatmapOut:
     today = date.today()
-    start_date = today - timedelta(days=months * 30)
+    start_month = today.month - months - 1
+    start_year = today.year + start_month // 12
+    start_month = start_month % 12 + 1
+    start_date = date(start_year, start_month, today.day)
 
     days: list[HeatmapDay] = []
     max_count = 0

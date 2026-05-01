@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from database import get_db
 from modules.planning.schemas import (
@@ -34,4 +34,7 @@ def auto_balance(body: AutoBalanceRequest, db: Session = Depends(get_db)):
 
 @router.post("/carry-forward", response_model=CarryForwardResponse, summary="Move overdue tasks to this week")
 def carry_forward(body: CarryForwardRequest, db: Session = Depends(get_db)):
-    return service.carry_forward(db, body.target_week_start)
+    try:
+        return service.carry_forward(db, body.target_week_start)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))

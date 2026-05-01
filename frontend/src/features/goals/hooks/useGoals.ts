@@ -64,6 +64,7 @@ export function useLinkTaskToGoal() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["goals"] });
       qc.invalidateQueries({ queryKey: ["tasks"] });
+      qc.invalidateQueries({ queryKey: ["cockpit"] });
     },
   });
 }
@@ -76,6 +77,7 @@ export function useUnlinkTaskFromGoal() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["goals"] });
       qc.invalidateQueries({ queryKey: ["tasks"] });
+      qc.invalidateQueries({ queryKey: ["cockpit"] });
     },
   });
 }

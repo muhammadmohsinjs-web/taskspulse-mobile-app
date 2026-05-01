@@ -1,3 +1,5 @@
+import { validateStatus, validatePriority } from "./task";
+
 export interface CockpitHabit {
   id: string;
   title: string;
@@ -93,8 +95,8 @@ export function mapCockpit(raw: CockpitRaw): DailyCockpit {
       id: t.id,
       title: t.title,
       description: t.description,
-      status: t.status,
-      priority: t.priority,
+      status: validateStatus(t.status),
+      priority: validatePriority(t.priority),
       dueDate: t.due_date,
       categoryId: t.category_id,
       completedAt: t.completed_at,

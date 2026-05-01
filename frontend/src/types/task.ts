@@ -28,14 +28,18 @@ export interface TaskRaw {
   updated_at: string;
 }
 
-function validateStatus(s: string): Task["status"] {
+export function validateStatus(s: string): Task["status"] {
   const valid: Task["status"][] = ["todo", "in_progress", "done"];
-  return valid.includes(s as Task["status"]) ? (s as Task["status"]) : "todo";
+  if (valid.includes(s as Task["status"])) return s as Task["status"];
+  console.warn(`[mapTask] Unexpected task status "${s}", defaulting to "todo"`);
+  return "todo";
 }
 
-function validatePriority(p: string): Task["priority"] {
+export function validatePriority(p: string): Task["priority"] {
   const valid: Task["priority"][] = ["low", "medium", "high", "urgent"];
-  return valid.includes(p as Task["priority"]) ? (p as Task["priority"]) : "medium";
+  if (valid.includes(p as Task["priority"])) return p as Task["priority"];
+  console.warn(`[mapTask] Unexpected task priority "${p}", defaulting to "medium"`);
+  return "medium";
 }
 
 export function mapTask(raw: TaskRaw): Task {

@@ -151,9 +151,14 @@ const BacklogScreen: React.FC = () => {
         const formatted = selectedDate.toISOString().split("T")[0];
         updateTask.mutate(
           { id: scheduleTarget.id, payload: { dueDate: formatted } },
-          { onError: (e: unknown) => Alert.alert("Error", getErrorMessage(e, "Failed to schedule task")) }
+          {
+            onSuccess: () => {
+              setScheduleTarget(null);
+              if (Platform.OS === "ios") setShowDatePicker(false);
+            },
+            onError: (e: unknown) => Alert.alert("Error", getErrorMessage(e, "Failed to schedule task")),
+          }
         );
-        setScheduleTarget(null);
       }
     },
     [scheduleTarget, updateTask]

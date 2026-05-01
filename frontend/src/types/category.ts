@@ -18,7 +18,9 @@ export interface CategoryRaw {
 
 function validateAppliesTo(a: string): Category["appliesTo"] {
   const valid: Category["appliesTo"][] = ["task", "habit", "both"];
-  return valid.includes(a as Category["appliesTo"]) ? (a as Category["appliesTo"]) : "both";
+  if (valid.includes(a as Category["appliesTo"])) return a as Category["appliesTo"];
+  console.warn(`[mapCategory] Unexpected applies_to "${a}", defaulting to "both"`);
+  return "both";
 }
 
 export function mapCategory(raw: CategoryRaw): Category {

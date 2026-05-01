@@ -81,3 +81,5 @@ class HabitWithStreak(BaseModel):
     longest_streak: int = 0
     last_completed_date: str | None = None
     completed_today: bool = False
+
+    model_config = {"from_attributes": True}

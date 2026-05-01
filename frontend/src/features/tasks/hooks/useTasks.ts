@@ -16,6 +16,7 @@ export function useCreateTask() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["tasks"] });
       qc.invalidateQueries({ queryKey: ["cockpit"] });
+      qc.invalidateQueries({ queryKey: ["goals"] });
     },
   });
 }
@@ -28,6 +29,7 @@ export function useUpdateTask() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["tasks"] });
       qc.invalidateQueries({ queryKey: ["cockpit"] });
+      qc.invalidateQueries({ queryKey: ["goals"] });
     },
   });
 }
@@ -39,6 +41,7 @@ export function useDeleteTask() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["tasks"] });
       qc.invalidateQueries({ queryKey: ["cockpit"] });
+      qc.invalidateQueries({ queryKey: ["goals"] });
     },
   });
 }

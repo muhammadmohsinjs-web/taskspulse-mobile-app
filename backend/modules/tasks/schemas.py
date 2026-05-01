@@ -21,7 +21,6 @@ class TaskUpdate(BaseModel):
     due_date: str | None = None
     category_id: str | None = None
     recurrence_rule: str | None = None
-    completed_at: str | None = None
 
 
 class TaskOut(BaseModel):

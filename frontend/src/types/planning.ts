@@ -1,3 +1,5 @@
+import { validateStatus, validatePriority } from "./task";
+
 export interface PlanningTask {
   id: string;
   title: string;
@@ -112,8 +114,8 @@ function mapPlanningTask(raw: PlanningTaskRaw): PlanningTask {
   return {
     id: raw.id,
     title: raw.title,
-    status: raw.status,
-    priority: raw.priority,
+    status: validateStatus(raw.status),
+    priority: validatePriority(raw.priority),
     dueDate: raw.due_date,
     categoryId: raw.category_id,
     completedAt: raw.completed_at,

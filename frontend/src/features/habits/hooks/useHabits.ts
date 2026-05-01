@@ -24,6 +24,7 @@ export function useCreateHabit() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["habits"] });
       qc.invalidateQueries({ queryKey: ["cockpit"] });
+      qc.invalidateQueries({ queryKey: ["goals"] });
     },
   });
 }
@@ -36,6 +37,7 @@ export function useUpdateHabit() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["habits"] });
       qc.invalidateQueries({ queryKey: ["cockpit"] });
+      qc.invalidateQueries({ queryKey: ["goals"] });
     },
   });
 }
@@ -47,6 +49,7 @@ export function useDeleteHabit() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["habits"] });
       qc.invalidateQueries({ queryKey: ["cockpit"] });
+      qc.invalidateQueries({ queryKey: ["goals"] });
     },
   });
 }
@@ -64,6 +67,7 @@ export function useToggleHabit() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["habits"] });
       qc.invalidateQueries({ queryKey: ["cockpit"] });
+      qc.invalidateQueries({ queryKey: ["goals"] });
     },
   });
 }

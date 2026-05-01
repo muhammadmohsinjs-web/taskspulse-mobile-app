@@ -1,10 +1,13 @@
-from sqlalchemy import Column, String, DateTime, func
+from sqlalchemy import Column, String, DateTime, CheckConstraint, func
 from database import Base
 from modules.utils import generate_uuid
 
 
 class Category(Base):
     __tablename__ = "categories"
+    __table_args__ = (
+        CheckConstraint("applies_to IN ('task', 'habit', 'both')", name="ck_categories_applies_to"),
+    )
 
     id = Column(String, primary_key=True, default=generate_uuid)
     name = Column(String, nullable=False, unique=True)

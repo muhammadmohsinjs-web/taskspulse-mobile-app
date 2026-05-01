@@ -18,8 +18,10 @@ const queryClient = new QueryClient({
     },
   },
   mutationCache: new MutationCache({
-    onError: (error: Error) => {
-      Alert.alert("Error", error.message || "Something went wrong");
+    onError: (_error: Error) => {
+      // Errors are handled per-screen via onError callbacks.
+      // Log-only here to avoid duplicate alert popups.
+      if (__DEV__) console.warn("[MutationCache]", _error.message);
     },
   }),
 });

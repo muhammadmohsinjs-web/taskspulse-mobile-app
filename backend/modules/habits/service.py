@@ -1,10 +1,7 @@
-import logging
 from datetime import date, datetime, timezone, timedelta
 from sqlalchemy.orm import Session
 from modules.habits.models import Habit, HabitLog, HabitStreak
 from modules.habits.schemas import HabitCreate, HabitUpdate, HabitWithStreak
-
-logger = logging.getLogger(__name__)
 
 
 def get_habits(db: Session):
@@ -67,7 +64,11 @@ def complete_habit(db: Session, habit_id: str, completion_date: str | None = Non
 
     log = HabitLog(habit_id=habit_id, completed_date=completed)
     db.add(log)
-    db.commit()
+    try:
+        db.commit()
+    except Exception:
+        db.rollback()
+        return None
     db.refresh(log)
 
     _recalculate_streak(db, habit_id)
@@ -75,6 +76,9 @@ def complete_habit(db: Session, habit_id: str, completion_date: str | None = Non
 
 
 def undo_completion(db: Session, habit_id: str, completion_date: str | None = None):
+    habit = db.query(Habit).filter(Habit.id == habit_id, Habit.deleted_at.is_(None)).first()
+    if not habit:
+        return None
     completed = completion_date or date.today().isoformat()
 
     log = db.query(HabitLog).filter(
@@ -103,14 +107,18 @@ def batch_get_streaks(db: Session, habit_ids: list[str]) -> dict[str, HabitStrea
     existing_ids = {s.habit_id for s in streaks}
     result = {s.habit_id: s for s in streaks}
     has_new = False
+    new_streaks: list[HabitStreak] = []
     for hid in habit_ids:
         if hid not in existing_ids:
             streak = HabitStreak(habit_id=hid)
             db.add(streak)
             result[hid] = streak
+            new_streaks.append(streak)
             has_new = True
     if has_new:
         db.commit()
+        for s in new_streaks:
+            db.refresh(s)
     return result
 
 
