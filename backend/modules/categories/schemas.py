@@ -22,7 +22,7 @@ class CategoryOut(BaseModel):
     name: str
     color: str
     icon: str
-    applies_to: str
+    applies_to: Literal["task", "habit", "both"]
     created_at: datetime
     updated_at: datetime
 

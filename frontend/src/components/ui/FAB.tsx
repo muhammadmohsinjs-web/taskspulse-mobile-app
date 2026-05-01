@@ -34,7 +34,7 @@ const styles = StyleSheet.create({
     ...theme.shadow,
     elevation: 6,
   },
-  fabText: { color: "#FFF", fontSize: 28, fontWeight: "300", marginTop: -2 },
+  fabText: { color: theme.colors.textOnPrimary, fontSize: 28, fontWeight: "300", marginTop: -2 },
 });
 
 export default FAB;

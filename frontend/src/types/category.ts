@@ -16,13 +16,18 @@ export interface CategoryRaw {
   created_at: string;
 }
 
+function validateAppliesTo(a: string): Category["appliesTo"] {
+  const valid: Category["appliesTo"][] = ["task", "habit", "both"];
+  return valid.includes(a as Category["appliesTo"]) ? (a as Category["appliesTo"]) : "both";
+}
+
 export function mapCategory(raw: CategoryRaw): Category {
   return {
     id: raw.id,
     name: raw.name,
     color: raw.color,
     icon: raw.icon,
-    appliesTo: raw.applies_to as Category["appliesTo"],
+    appliesTo: validateAppliesTo(raw.applies_to),
     createdAt: raw.created_at,
   };
 }

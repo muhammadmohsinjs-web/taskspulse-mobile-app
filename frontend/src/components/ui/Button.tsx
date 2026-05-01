@@ -43,7 +43,7 @@ const Button: React.FC<ButtonProps> = ({
   return (
     <TouchableOpacity style={buttonStyles} onPress={onPress} disabled={isDisabled} activeOpacity={0.7}>
       {loading ? (
-        <ActivityIndicator color={variant === "primary" ? "#FFF" : theme.colors.primary} size="small" />
+        <ActivityIndicator color={variant === "primary" ? theme.colors.textOnPrimary : theme.colors.primary} size="small" />
       ) : (
         <Text style={textStyles}>{title}</Text>
       )}
@@ -66,9 +66,9 @@ const styles = StyleSheet.create({
   ghost: { backgroundColor: "transparent" },
   disabled: { opacity: 0.5 },
   text: { fontSize: theme.fontSize.md, fontWeight: "600" },
-  textPrimary: { color: "#FFF" },
+  textPrimary: { color: theme.colors.textOnPrimary },
   textSecondary: { color: theme.colors.primary },
-  textDanger: { color: "#FFF" },
+  textDanger: { color: theme.colors.textOnPrimary },
   textGhost: { color: theme.colors.primary },
   textDisabled: { color: theme.colors.textMuted },
 });

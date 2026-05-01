@@ -28,13 +28,23 @@ export interface TaskRaw {
   updated_at: string;
 }
 
+function validateStatus(s: string): Task["status"] {
+  const valid: Task["status"][] = ["todo", "in_progress", "done"];
+  return valid.includes(s as Task["status"]) ? (s as Task["status"]) : "todo";
+}
+
+function validatePriority(p: string): Task["priority"] {
+  const valid: Task["priority"][] = ["low", "medium", "high", "urgent"];
+  return valid.includes(p as Task["priority"]) ? (p as Task["priority"]) : "medium";
+}
+
 export function mapTask(raw: TaskRaw): Task {
   return {
     id: raw.id,
     title: raw.title,
     description: raw.description,
-    status: raw.status as Task["status"],
-    priority: raw.priority as Task["priority"],
+    status: validateStatus(raw.status),
+    priority: validatePriority(raw.priority),
     dueDate: raw.due_date,
     categoryId: raw.category_id,
     recurrenceRule: raw.recurrence_rule,

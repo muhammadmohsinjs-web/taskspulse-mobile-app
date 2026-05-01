@@ -1,6 +1,10 @@
 import { Platform } from "react-native";
 
 const getBaseUrl = (): string => {
+  // Allow override via EXPO_PUBLIC_API_URL environment variable (Expo build-time env var)
+  const envUrl = process.env.EXPO_PUBLIC_API_URL;
+  if (envUrl) return envUrl;
+
   if (Platform.OS === "android") {
     return "http://10.0.2.2:8000";
   }
@@ -40,22 +44,27 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
         ...rest.headers,
       },
       body: body ? JSON.stringify(body) : undefined,
-      signal: controller.signal,
+      signal: mergeSignals(controller.signal, rest.signal),
     });
 
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
       throw new ApiError(
-        err.detail || `Request failed: ${res.status}`,
+        err.detail || err.message || `Request failed: ${res.status}`,
         res.status
       );
     }
 
+    // DELETE endpoints return 204 No Content with no response body.
+    // Callers (tasksApi.delete, habitsApi.delete, etc.) are typed Promise<void>
+    // and discard the return value, so null is safe in practice.
+    // If a non-DELETE endpoint ever returns 204 unexpectedly, callers
+    // that cast to a concrete type (e.g. TaskRaw) would get null at runtime.
     if (res.status === 204) return null as T;
     return res.json();
   } catch (e) {
     if (e instanceof ApiError) throw e;
-    if (e instanceof DOMException && e.name === "AbortError") {
+    if (e instanceof Error && e.name === "AbortError") {
       throw new Error("Request timed out. Is the backend running?");
     }
     throw e;

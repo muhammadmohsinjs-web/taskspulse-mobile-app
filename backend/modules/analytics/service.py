@@ -129,6 +129,13 @@ def get_analytics_summary(db: Session) -> AnalyticsSummaryOut:
         )
 
     # --- Task trends (30 days) ---
+    # NOTE: func.date() delegates to SQLite's date() function, which extracts
+    # "YYYY-MM-DD" from stored timestamps.  This is the correct SQLite idiom.
+    # .cast(Date) would emit CAST(... AS DATE) which is a no-op in SQLite
+    # (SQLite has no native DATE type) and would silently break comparisons.
+    # Both func.now() (server_default on created_at) and Python date.today()
+    # use local machine time, so dates remain consistent on single-machine deploys.
+    # If migrating to PostgreSQL, replace func.date() with cast(col, Date).
     daily_created: list[int] = []
     daily_completed: list[int] = []
     total_created_30 = 0
@@ -240,6 +247,7 @@ def get_heatmap(db: Session, months: int = 3) -> HeatmapOut:
     )
     task_comp_map = {row[0]: row[1] for row in task_completions}
 
+    # See note above about func.date() and SQLite date extraction.
     task_created = (
         db.query(func.date(Task.created_at), func.count(Task.id))
         .filter(

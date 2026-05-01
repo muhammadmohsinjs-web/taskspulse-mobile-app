@@ -154,7 +154,6 @@ const TaskListScreen: React.FC = () => {
         onSave={handleSave}
         editingTask={editingTask}
         saving={saving}
-        showGoalPicker
       />
     </View>
   );
@@ -186,7 +185,7 @@ const styles = StyleSheet.create({
     color: theme.colors.textSecondary,
   },
   filterChipTextActive: {
-    color: "#FFF",
+    color: theme.colors.textOnPrimary,
   },
   listContent: { padding: theme.spacing.lg, paddingBottom: 100 },
 });

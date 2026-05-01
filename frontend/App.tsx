@@ -19,7 +19,7 @@ const queryClient = new QueryClient({
   },
   mutationCache: new MutationCache({
     onError: (error: Error) => {
-      console.error("[Global Mutation Error]", error.message);
+      Alert.alert("Error", error.message || "Something went wrong");
     },
   }),
 });

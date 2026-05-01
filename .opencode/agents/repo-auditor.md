@@ -3,7 +3,7 @@ description: Senior repository auditor for scanning the full codebase, finding b
 mode: subagent
 temperature: 0.1
 permission:
-  edit: deny
+  edit: ask
   bash: ask
 ---
 

@@ -28,8 +28,8 @@ class TaskOut(BaseModel):
     id: str
     title: str
     description: str
-    status: str
-    priority: str
+    status: Literal["todo", "in_progress", "done"]
+    priority: Literal["low", "medium", "high", "urgent"]
     due_date: str | None = None
     category_id: str | None = None
     recurrence_rule: str | None = None

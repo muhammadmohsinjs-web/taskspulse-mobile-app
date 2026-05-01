@@ -41,5 +41,3 @@ class GoalOut(BaseModel):
     progress: float = 0.0
     total_tasks: int = 0
     completed_tasks: int = 0
-
-    model_config = {"from_attributes": True}

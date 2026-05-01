@@ -32,9 +32,6 @@ export function useCreateGoal() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["goals"] });
     },
-    onError: (error: Error) => {
-      console.error("Failed to create goal:", error.message);
-    },
   });
 }
 
@@ -46,9 +43,6 @@ export function useUpdateGoal() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["goals"] });
     },
-    onError: (error: Error) => {
-      console.error("Failed to update goal:", error.message);
-    },
   });
 }
 
@@ -58,9 +52,6 @@ export function useDeleteGoal() {
     mutationFn: (id: string) => goalsApi.delete(id),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["goals"] });
-    },
-    onError: (error: Error) => {
-      console.error("Failed to delete goal:", error.message);
     },
   });
 }
@@ -74,9 +65,6 @@ export function useLinkTaskToGoal() {
       qc.invalidateQueries({ queryKey: ["goals"] });
       qc.invalidateQueries({ queryKey: ["tasks"] });
     },
-    onError: (error: Error) => {
-      console.error("Failed to link task:", error.message);
-    },
   });
 }
 
@@ -88,9 +76,6 @@ export function useUnlinkTaskFromGoal() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["goals"] });
       qc.invalidateQueries({ queryKey: ["tasks"] });
-    },
-    onError: (error: Error) => {
-      console.error("Failed to unlink task:", error.message);
     },
   });
 }

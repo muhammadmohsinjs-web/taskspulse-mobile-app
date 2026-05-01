@@ -71,12 +71,17 @@ const DateDetailScreen: React.FC = () => {
   const { refreshControl } = useRefreshControl({ refetch });
 
   const groupedTasks = useMemo(() => {
-    if (!tasks) return { todo: [], in_progress: [], done: [] };
-    return {
-      todo: tasks.filter((t) => t.status === "todo"),
-      in_progress: tasks.filter((t) => t.status === "in_progress"),
-      done: tasks.filter((t) => t.status === "done"),
+    const groups: { todo: Task[]; in_progress: Task[]; done: Task[] } = {
+      todo: [],
+      in_progress: [],
+      done: [],
     };
+    tasks?.forEach((t) => {
+      if (t.status === "todo") groups.todo.push(t);
+      else if (t.status === "in_progress") groups.in_progress.push(t);
+      else if (t.status === "done") groups.done.push(t);
+    });
+    return groups;
   }, [tasks]);
 
   const sectionedData = useMemo(() => {
@@ -162,6 +167,12 @@ const DateDetailScreen: React.FC = () => {
     done: "Completed",
   };
 
+  const taskIndexMap = useMemo(() => {
+    const map = new Map<string, number>();
+    tasks?.forEach((t, i) => map.set(t.id, i));
+    return map;
+  }, [tasks]);
+
   if (isLoading) return <LoadingSpinner message="Loading tasks..." />;
 
   return (
@@ -194,18 +205,7 @@ const DateDetailScreen: React.FC = () => {
               </View>
             </Card>
 
-            {/* Section headers as a separate list item */}
-            {sectionedData.length > 0 && (
-              <View style={styles.sectionsWrap}>
-                {sectionedData.map((s) => (
-                  <View key={s.status} style={styles.sectionHeader}>
-                    <Text style={styles.sectionHeaderText}>
-                      {STATUS_LABELS[s.status]} ({s.count})
-                    </Text>
-                  </View>
-                ))}
-              </View>
-            )}
+            {/* Section headers are rendered inline per group in renderItem */}
           </>
         }
         renderItem={({ item }) => {
@@ -221,7 +221,7 @@ const DateDetailScreen: React.FC = () => {
             .reduce((sum, s) => sum + s.count, 0);
           const currentSectionCount = sectionedData[sectionIndex]?.count ?? 0;
           const positionInSection =
-            tasks ? tasks.indexOf(item) - prevSectionCount : 0;
+            (taskIndexMap.get(item.id) ?? 0) - prevSectionCount;
 
           // Add section header before first item of each group
           const showHeader = positionInSection === 0 && sectionedData[sectionIndex] !== undefined;
@@ -311,9 +311,6 @@ const styles = StyleSheet.create({
     color: theme.colors.textMuted,
     marginTop: 4,
     textAlign: "right",
-  },
-  sectionsWrap: {
-    paddingHorizontal: theme.spacing.lg,
   },
   sectionHeader: {
     paddingHorizontal: theme.spacing.lg,
