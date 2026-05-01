@@ -28,6 +28,12 @@ import {
   Lock,
   Eye,
   EyeOff,
+  Menu,
+  Bell,
+  Flag,
+  Clock,
+  User,
+  CheckCircle2,
   type LucideIcon,
 } from "lucide-react-native";
 import { theme } from "../../theme/theme";
@@ -59,7 +65,13 @@ export type IconName =
   | "mail"
   | "lock"
   | "eye"
-  | "eyeOff";
+  | "eyeOff"
+  | "menu"
+  | "bell"
+  | "flag"
+  | "clock"
+  | "user"
+  | "checkCircle";
 
 const ICON_MAP: Record<IconName, LucideIcon> = {
   warning: AlertTriangle,
@@ -89,6 +101,12 @@ const ICON_MAP: Record<IconName, LucideIcon> = {
   lock: Lock,
   eye: Eye,
   eyeOff: EyeOff,
+  menu: Menu,
+  bell: Bell,
+  flag: Flag,
+  clock: Clock,
+  user: User,
+  checkCircle: CheckCircle2,
 };
 
 interface AppIconProps {
@@ -158,4 +176,10 @@ export const icons = {
   lock: "lock" as IconName,
   eye: "eye" as IconName,
   eyeOff: "eyeOff" as IconName,
+  menu: "menu" as IconName,
+  bell: "bell" as IconName,
+  flag: "flag" as IconName,
+  clock: "clock" as IconName,
+  user: "user" as IconName,
+  checkCircle: "checkCircle" as IconName,
 };

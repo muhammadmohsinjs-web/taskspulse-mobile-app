@@ -129,3 +129,21 @@ When a task involves third-party libraries, frameworks, SDKs, package APIs, setu
 2. Inspect the repo first to identify the exact package and version.
 3. Use Context7 only for the specific library/topic needed.
 4. Do not use Context7 for pure internal business logic, simple refactors, naming, or UI copy.
+
+## Design-to-Code Rule
+
+Whenever a UI image, mockup, or screenshot is provided, treat it as the visual source of truth.
+
+Before coding:
+
+1. Analyze the image visually.
+2. Break it into layout sections.
+3. Map each section to components.
+4. Extract colors, spacing, typography, radius, shadows, icons, and states.
+5. Inspect existing project design tokens and components.
+6. Implement the screen to match the image closely.
+7. Compare the implementation against the image and refine.
+
+Never redesign unless explicitly asked.
+Never ignore the provided image.
+Never replace the visual style with generic UI.
