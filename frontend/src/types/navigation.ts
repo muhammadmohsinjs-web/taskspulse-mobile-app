@@ -11,10 +11,17 @@ export type MoreStackParamList = {
   HabitsList: undefined;
   GoalDetail: { goalId: string };
   Backlog: undefined;
+  Analytics: undefined;
+};
+
+export type CalendarStackParamList = {
+  MonthlyCalendar: undefined;
+  DateDetail: { date: string };
 };
 
 export type RootTabParamList = {
   Today: undefined;
+  Calendar: undefined;
   Backlog: undefined;
   More: undefined;
 };

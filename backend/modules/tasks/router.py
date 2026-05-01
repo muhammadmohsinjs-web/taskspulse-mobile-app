@@ -12,12 +12,13 @@ def list_tasks(
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=500),
     date: str | None = Query(None, description="Filter by due_date (YYYY-MM-DD)"),
+    month: str | None = Query(None, description="Filter by month (YYYY-MM)"),
     status: str | None = Query(None, description="Filter by status (todo|in_progress|done)"),
     category_id: str | None = Query(None, description="Filter by category ID"),
     is_backlog: bool = Query(False, description="Filter tasks with no due_date (backlog)"),
     db: Session = Depends(get_db),
 ):
-    return service.get_tasks(db, skip=skip, limit=limit, date=date, status=status, category_id=category_id, is_backlog=is_backlog)
+    return service.get_tasks(db, skip=skip, limit=limit, date=date, month=month, status=status, category_id=category_id, is_backlog=is_backlog)
 
 
 @router.post("", response_model=TaskOut, status_code=status.HTTP_201_CREATED, summary="Create task")

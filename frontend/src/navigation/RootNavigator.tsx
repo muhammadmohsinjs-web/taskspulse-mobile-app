@@ -11,10 +11,20 @@ import TaskListScreen from "../features/tasks/screens/TaskListScreen";
 import GoalsListScreen from "../features/goals/screens/GoalsListScreen";
 import GoalDetailScreen from "../features/goals/screens/GoalDetailScreen";
 import BacklogScreen from "../features/backlog/screens/BacklogScreen";
+import MonthlyCalendarScreen from "../features/calendar/screens/MonthlyCalendarScreen";
+import DateDetailScreen from "../features/calendar/screens/DateDetailScreen";
+import AnalyticsScreen from "../features/analytics/screens/AnalyticsScreen";
 
 const Tab = createBottomTabNavigator();
 const MoreStack = createNativeStackNavigator();
 const TodayStack = createNativeStackNavigator();
+const CalendarStack = createNativeStackNavigator();
+
+const stackScreenOptions = {
+  headerShown: true as const,
+  headerTintColor: theme.colors.primary,
+  headerStyle: { backgroundColor: theme.colors.background },
+};
 
 const TodayStackNavigator = () => (
   <TodayStack.Navigator screenOptions={{ headerShown: false }}>
@@ -22,34 +32,37 @@ const TodayStackNavigator = () => (
     <TodayStack.Screen
       name="TaskList"
       component={TaskListScreen}
-      options={{
-        headerShown: true,
-        headerTitle: "All Tasks",
-        headerTintColor: theme.colors.primary,
-        headerStyle: { backgroundColor: theme.colors.background },
-      }}
+      options={{ ...stackScreenOptions, headerTitle: "All Tasks" }}
     />
     <TodayStack.Screen
       name="HabitsList"
       component={HabitsListScreen}
-      options={{
-        headerShown: true,
-        headerTitle: "Habits",
-        headerTintColor: theme.colors.primary,
-        headerStyle: { backgroundColor: theme.colors.background },
-      }}
+      options={{ ...stackScreenOptions, headerTitle: "Habits" }}
     />
     <TodayStack.Screen
       name="Backlog"
       component={BacklogScreen}
-      options={{
-        headerShown: true,
-        headerTitle: "Backlog",
-        headerTintColor: theme.colors.primary,
-        headerStyle: { backgroundColor: theme.colors.background },
-      }}
+      options={{ ...stackScreenOptions, headerTitle: "Backlog" }}
     />
   </TodayStack.Navigator>
+);
+
+const CalendarStackNavigator = () => (
+  <CalendarStack.Navigator>
+    <CalendarStack.Screen
+      name="MonthlyCalendar"
+      component={MonthlyCalendarScreen}
+      options={{ headerShown: false }}
+    />
+    <CalendarStack.Screen
+      name="DateDetail"
+      component={DateDetailScreen}
+      options={{
+        ...stackScreenOptions,
+        headerTitle: "Date",
+      }}
+    />
+  </CalendarStack.Navigator>
 );
 
 const MoreStackNavigator = () => (
@@ -57,47 +70,32 @@ const MoreStackNavigator = () => (
     <MoreStack.Screen
       name="Categories"
       component={CategoriesScreen}
-      options={{
-        headerTitle: "Categories",
-        headerTintColor: theme.colors.primary,
-        headerStyle: { backgroundColor: theme.colors.background },
-      }}
+      options={{ ...stackScreenOptions, headerTitle: "Categories" }}
     />
     <MoreStack.Screen
       name="GoalsList"
       component={GoalsListScreen}
-      options={{
-        headerTitle: "Goals",
-        headerTintColor: theme.colors.primary,
-        headerStyle: { backgroundColor: theme.colors.background },
-      }}
+      options={{ ...stackScreenOptions, headerTitle: "Goals" }}
     />
     <MoreStack.Screen
       name="HabitsList"
       component={HabitsListScreen}
-      options={{
-        headerTitle: "Habits",
-        headerTintColor: theme.colors.primary,
-        headerStyle: { backgroundColor: theme.colors.background },
-      }}
+      options={{ ...stackScreenOptions, headerTitle: "Habits" }}
     />
     <MoreStack.Screen
       name="GoalDetail"
       component={GoalDetailScreen}
-      options={{
-        headerTitle: "Goal",
-        headerTintColor: theme.colors.primary,
-        headerStyle: { backgroundColor: theme.colors.background },
-      }}
+      options={{ ...stackScreenOptions, headerTitle: "Goal" }}
     />
     <MoreStack.Screen
       name="Backlog"
       component={BacklogScreen}
-      options={{
-        headerTitle: "Backlog",
-        headerTintColor: theme.colors.primary,
-        headerStyle: { backgroundColor: theme.colors.background },
-      }}
+      options={{ ...stackScreenOptions, headerTitle: "Backlog" }}
+    />
+    <MoreStack.Screen
+      name="Analytics"
+      component={AnalyticsScreen}
+      options={{ ...stackScreenOptions, headerTitle: "Analytics" }}
     />
   </MoreStack.Navigator>
 );
@@ -105,8 +103,9 @@ const MoreStackNavigator = () => (
 const TabIcon = ({ label, focused }: { label: string; focused: boolean }) => {
   const icons: Record<string, string> = {
     Today: "☀️",
+    Calendar: "📅",
     Backlog: "📥",
-    More: "⋯",
+    More: "⋮",
   };
   return (
     <Text style={{ fontSize: focused ? 22 : 20, opacity: focused ? 1 : 0.5 }}>
@@ -135,6 +134,7 @@ const RootNavigator: React.FC = () => (
     })}
   >
     <Tab.Screen name="Today" component={TodayStackNavigator} />
+    <Tab.Screen name="Calendar" component={CalendarStackNavigator} />
     <Tab.Screen name="Backlog" component={BacklogScreen} />
     <Tab.Screen name="More" component={MoreStackNavigator} />
   </Tab.Navigator>

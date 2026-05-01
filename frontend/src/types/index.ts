@@ -8,4 +8,6 @@ export type { DailyCockpit, CockpitHabit, CockpitTask, GlobalStreak } from "./co
 export { mapCockpit } from "./cockpit";
 export type { Goal, GoalRaw, GoalCreatePayload, GoalUpdatePayload, GoalTaskLink, GoalTaskLinkRaw } from "./goal";
 export { mapGoal, mapGoalTaskLink } from "./goal";
-export type { TodayStackParamList, MoreStackParamList, RootTabParamList } from "./navigation";
+export type { AnalyticsSummary, HeatmapData, StreakInfo, GoalProgress, TaskTrends, HabitBar, CategoryDistribution } from "./analytics";
+export { mapAnalyticsSummary, mapHeatmapData } from "./analytics";
+export type { TodayStackParamList, MoreStackParamList, CalendarStackParamList, RootTabParamList } from "./navigation";

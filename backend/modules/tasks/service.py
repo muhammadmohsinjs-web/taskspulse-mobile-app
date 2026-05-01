@@ -9,6 +9,7 @@ def get_tasks(
     skip: int = 0,
     limit: int = 100,
     date: str | None = None,
+    month: str | None = None,
     status: str | None = None,
     category_id: str | None = None,
     task_ids: list[str] | None = None,
@@ -17,6 +18,8 @@ def get_tasks(
     query = db.query(Task).filter(Task.deleted_at.is_(None))
     if task_ids:
         query = query.filter(Task.id.in_(task_ids))
+    elif month:
+        query = query.filter(Task.due_date.like(f"{month}%"))
     elif is_backlog:
         query = query.filter(Task.due_date.is_(None))
     elif date:
