@@ -12,6 +12,7 @@ from modules.habits.router import router as habits_router
 from modules.cockpit.router import router as cockpit_router
 from modules.goals.router import router as goals_router
 from modules.analytics.router import router as analytics_router
+from modules.planning.router import router as planning_router
 
 
 @asynccontextmanager
@@ -38,6 +39,7 @@ app.include_router(habits_router, prefix="/habits", tags=["habits"])
 app.include_router(cockpit_router, prefix="/cockpit", tags=["cockpit"])
 app.include_router(goals_router, prefix="/goals", tags=["goals"])
 app.include_router(analytics_router, prefix="/analytics", tags=["analytics"])
+app.include_router(planning_router, prefix="/planning", tags=["planning"])
 
 
 @app.get("/health", tags=["system"], summary="Health check")

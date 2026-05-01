@@ -12,6 +12,8 @@ export type MoreStackParamList = {
   GoalDetail: { goalId: string };
   Backlog: undefined;
   Analytics: undefined;
+  WeeklyPlanning: undefined;
+  Settings: undefined;
 };
 
 export type CalendarStackParamList = {

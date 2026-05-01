@@ -15,6 +15,8 @@ import BacklogScreen from "../features/backlog/screens/BacklogScreen";
 import MonthlyCalendarScreen from "../features/calendar/screens/MonthlyCalendarScreen";
 import DateDetailScreen from "../features/calendar/screens/DateDetailScreen";
 import AnalyticsScreen from "../features/analytics/screens/AnalyticsScreen";
+import WeeklyPlanningScreen from "../features/planning/screens/WeeklyPlanningScreen";
+import SettingsScreen from "../features/settings/screens/SettingsScreen";
 
 const Tab = createBottomTabNavigator();
 const MoreStack = createNativeStackNavigator();
@@ -87,6 +89,16 @@ const MoreStackNavigator = () => (
       name="Analytics"
       component={AnalyticsScreen}
       options={{ ...stackScreenOptions, headerTitle: "Analytics" }}
+    />
+    <MoreStack.Screen
+      name="WeeklyPlanning"
+      component={WeeklyPlanningScreen}
+      options={{ ...stackScreenOptions, headerTitle: "Weekly Planning" }}
+    />
+    <MoreStack.Screen
+      name="Settings"
+      component={SettingsScreen}
+      options={{ ...stackScreenOptions, headerTitle: "Settings" }}
     />
   </MoreStack.Navigator>
 );
