@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, StyleSheet, TouchableOpacity, Alert, Platform } from "react-native";
+import { View, Text, TextInput, StyleSheet, TouchableOpacity, Pressable, Alert, Platform } from "react-native";
 import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { theme } from "../../../theme/theme";
 import Modal from "../../../components/ui/Modal";
@@ -87,7 +87,6 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({
   };
 
   const handleDateChange = (_event: DateTimePickerEvent, selectedDate?: Date) => {
-    // Android: dismiss the dialog after selection
     if (Platform.OS === "android") {
       setShowDatePicker(false);
     }
@@ -95,6 +94,10 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({
       const formatted = selectedDate.toISOString().split("T")[0]; // YYYY-MM-DD
       setDueDate(formatted);
     }
+  };
+
+  const handleDateCancel = () => {
+    setShowDatePicker(false);
   };
 
   const handleClearDate = () => {
@@ -137,8 +140,29 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({
 
   const isEditing = !!editingTask;
 
+  // ── iOS Date Picker Overlay ─────────────────────────────────────
+  const datePickerOverlay = showDatePicker && Platform.OS === "ios" ? (
+    <View style={overlayStyles.container}>
+      <Pressable style={overlayStyles.backdrop} onPress={handleDateCancel} />
+      <View style={overlayStyles.card}>
+        <Text style={overlayStyles.title}>Select Date</Text>
+        <DateTimePicker
+          value={getDateFromString(dueDate)}
+          mode="date"
+          display="spinner"
+          onChange={handleDateChange}
+        />
+        <View style={overlayStyles.actions}>
+          <Button title="Cancel" variant="ghost" onPress={handleDateCancel} />
+          <Button title="Done" onPress={handleDateCancel} />
+        </View>
+      </View>
+    </View>
+  ) : null;
+  // ────────────────────────────────────────────────────────────────
+
   return (
-    <Modal visible={visible} onClose={onClose} title={isEditing ? "Edit Task" : "New Task"}>
+    <Modal visible={visible} onClose={onClose} title={isEditing ? "Edit Task" : "New Task"} overlay={datePickerOverlay}>
       <Text style={styles.label}>Title</Text>
       <TextInput
         style={styles.input}
@@ -209,7 +233,7 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({
       <Text style={styles.label}>Due Date (optional)</Text>
       <TouchableOpacity
         style={styles.dateInput}
-        onPress={() => setShowDatePicker(!showDatePicker)}
+        onPress={() => setShowDatePicker(true)}
         activeOpacity={0.7}
         accessibilityLabel="Select due date"
         accessibilityRole="button"
@@ -229,11 +253,12 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({
         ) : null}
       </TouchableOpacity>
 
-      {showDatePicker && (
+      {/* Android native date dialog */}
+      {showDatePicker && Platform.OS === "android" && (
         <DateTimePicker
           value={getDateFromString(dueDate)}
           mode="date"
-          display={Platform.OS === "ios" ? "inline" : "default"}
+          display="default"
           onChange={handleDateChange}
         />
       )}
@@ -441,6 +466,49 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
     gap: theme.spacing.sm,
     marginTop: theme.spacing.xl,
+  },
+});
+
+// Overlay styles (iOS date picker)
+const overlayStyles = StyleSheet.create({
+  container: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 100,
+  },
+  backdrop: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(255,255,255,0.95)",
+  },
+  card: {
+    width: "90%",
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.borderRadius.xl,
+    padding: theme.spacing.xl,
+    alignItems: "center",
+    ...theme.shadow,
+  },
+  title: {
+    fontSize: theme.fontSize.lg,
+    fontWeight: "700",
+    color: theme.colors.textPrimary,
+    marginBottom: theme.spacing.md,
+  },
+  actions: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    gap: theme.spacing.md,
+    marginTop: theme.spacing.md,
+    width: "100%",
   },
 });
 

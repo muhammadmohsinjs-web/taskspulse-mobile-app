@@ -2,7 +2,7 @@ import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { theme } from "../../../theme/theme";
 import { Habit } from "../../../types";
-import { AppIcon, icons } from "../../../components/ui/Icon";
+import { FlameIcon } from "../../../components/ui/FlameIcon";
 
 interface HabitRowProps {
   habit: Pick<Habit, "id" | "title" | "description" | "completedToday" | "currentStreak" | "color">;
@@ -41,7 +41,7 @@ const HabitRow: React.FC<HabitRowProps> = ({ habit, onToggle, onLongPress }) => 
           <Text style={[styles.streakText, { color: streakColor }]}>
             {habit.currentStreak}
           </Text>
-          <AppIcon name={icons.flame} size={12} color={streakColor} />
+          <FlameIcon size={14} />
         </View>
       )}
     </TouchableOpacity>
@@ -103,9 +103,6 @@ const styles = StyleSheet.create({
     fontSize: theme.fontSize.sm,
     fontWeight: "700",
     marginRight: 2,
-  },
-  streakIcon: {
-    fontSize: 12,
   },
 });
 

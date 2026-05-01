@@ -7,9 +7,10 @@ interface ModalProps {
   onClose: () => void;
   title: string;
   children: React.ReactNode;
+  overlay?: React.ReactNode;
 }
 
-const Modal: React.FC<ModalProps> = ({ visible, onClose, title, children }) => (
+const Modal: React.FC<ModalProps> = ({ visible, onClose, title, children, overlay }) => (
   <RNModal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
     <Pressable style={styles.overlay} onPress={onClose}>
       <Pressable style={styles.content} onPress={() => {}}>
@@ -19,9 +20,12 @@ const Modal: React.FC<ModalProps> = ({ visible, onClose, title, children }) => (
             <Text style={styles.closeBtnText}>✕</Text>
           </TouchableOpacity>
         </View>
-        <ScrollView style={styles.body} keyboardShouldPersistTaps="handled">
-          {children}
-        </ScrollView>
+        <View style={styles.bodyContainer}>
+          <ScrollView style={styles.body} keyboardShouldPersistTaps="handled">
+            {children}
+          </ScrollView>
+          {overlay}
+        </View>
       </Pressable>
     </Pressable>
   </RNModal>
@@ -38,6 +42,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.surface,
     borderRadius: theme.borderRadius.lg,
     maxHeight: "80%",
+    overflow: "hidden",
   },
   header: {
     flexDirection: "row",
@@ -54,7 +59,14 @@ const styles = StyleSheet.create({
   },
   closeBtn: { padding: theme.spacing.xs },
   closeBtnText: { fontSize: 18, color: theme.colors.textMuted },
-  body: { paddingHorizontal: theme.spacing.xl, paddingBottom: theme.spacing.xl },
+  bodyContainer: {
+    position: "relative",
+  },
+  body: {
+    maxHeight: 500,
+    paddingHorizontal: theme.spacing.xl,
+    paddingBottom: theme.spacing.xl,
+  },
 });
 
 export default Modal;

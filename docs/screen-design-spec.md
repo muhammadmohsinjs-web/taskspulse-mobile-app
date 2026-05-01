@@ -20,13 +20,13 @@
 
 **Recommended redesign:** Five bottom tabs, each with its own stack:
 
-| Tab | Icon | Label | Stack screens |
-|-----|------|-------|---------------|
-| Today | ☀️ | Today | DailyCockpit, TaskDetail, TaskFormModal |
-| Calendar | 📅 | Calendar | MonthlyCalendar, DateDetail |
-| Backlog | 📥 | Backlog | BacklogScreen, TaskFormModal |
-| Goals | 🎯 | Goals | GoalsList, GoalDetail, GoalFormModal, GoalTaskLinkModal |
-| More | ⚙️ | More | HabitsList, HabitFormModal, Categories, Analytics, Settings, WeeklyPlanning |
+| Tab      | Icon | Label    | Stack screens                                                               |
+| -------- | ---- | -------- | --------------------------------------------------------------------------- |
+| Today    | ☀️   | Today    | DailyCockpit, TaskDetail, TaskFormModal                                     |
+| Calendar | 📅   | Calendar | MonthlyCalendar, DateDetail                                                 |
+| Backlog  | 📥   | Backlog  | BacklogScreen, TaskFormModal                                                |
+| Goals    | 🎯   | Goals    | GoalsList, GoalDetail, GoalFormModal, GoalTaskLinkModal                     |
+| More     | ⚙️   | More     | HabitsList, HabitFormModal, Categories, Analytics, Settings, WeeklyPlanning |
 
 Each tab icon uses a focused/unfocused state: full color at 100% opacity when active, muted/50% opacity when inactive. The More tab acts as a "settings and advanced" hub for power users. The primary creation flow (FAB) remains on the Today tab only.
 
@@ -68,6 +68,7 @@ Each tab icon uses a focused/unfocused state: full color at 100% opacity when ac
 The OnboardingScreen is a three-step horizontal swipeable carousel, rendered full-screen with the system status bar hidden behind a dark overlay. Each step occupies the full viewport height and is visible one at a time with a parallax transition between steps. A centered illustration area occupies the top 40% of the screen on each page. Below the illustration, a short headline in the heading font size plus a supporting sentence in sm secondary text sits centered with lg horizontal padding. At the bottom, a row of three progress dots sits above a single wide primary button labeled with the next step's action. A small "Skip" ghost button appears in the top-right corner with xl top padding. The final step replaces the primary button with a "Get Started" call to action, and the skip button disappears.
 
 The three steps are:
+
 - **Step 1:** "Build habits that stick" — illustration of a growing streak flame, explaining daily habit tracking
 - **Step 2:** "Plan your days, not just your tasks" — calendar-plus-task illustration, explaining the cockpit view
 - **Step 3:** "Reach your goals" — progress bar illustration, explaining goal linking
@@ -177,11 +178,13 @@ At the top, a large Task Title is displayed in xxl bold dark text, occupying the
 Below the metadata row, a subtle horizontal divider (1px, border color) separates the header area from the body. The description — if present — follows in md secondary text with comfortable line height. If no description exists, a muted "No description" placeholder appears.
 
 A "Progress & Linking" card follows, containing:
+
 - A status toggle row with three touchable pills (To Do, In Progress, Done) — the current status is filled primary blue
 - If linked to a goal, a linked goal preview card within this section showing the goal name, its progress bar, and a "View Goal" link
 - If not linked, a "Link to Goal" button (secondary variant) that opens the GoalTaskLinkModal
 
 Below, a "Schedule" card shows:
+
 - The current due date displayed prominently with a calendar emoji
 - A "Change Date" button that triggers the native date picker
 - A "Move to Backlog" button (ghost variant with muted text) that clears the due date
@@ -237,6 +240,7 @@ Instead of requiring the user to tap Edit to add a description, allow a subtle i
 The TaskFormModal is presented as a centered Modal (overlay + white sheet, 80% max height, rounded-lg corners). The header row spans the full width: the title "New Task" or "Edit Task" on the left, an "✕" close button on the right. The body is a ScrollView containing labeled form fields stacked vertically with md spacing between field groups.
 
 **Form fields in order:**
+
 1. **Title** — required, single-line TextInput with placeholder "e.g. Review contract"
 2. **Description** — optional, multiline TextInput (3 lines visible, scrollable) with placeholder "Add details..."
 3. **Priority** — horizontal row of 4 option pills: Low, Medium, High, Urgent. The active pill is filled primary blue; inactive pills are outlined
@@ -452,6 +456,7 @@ The GoalsListScreen has a clean layout with the native header reading "Goals." T
 **Recommended enhancement:** Add a segmented filter at the top of the list (above the first goal): "All," "Active," "Completed." Active goals are those with progress < 100%. Completed goals (100% progress) are visually faded — lower opacity, muted status text. This prevents completed goals from cluttering the active view while still being accessible.
 
 Each GoalCard displays:
+
 - Title (md, semibold, dark)
 - Task count (xs, secondary): "3/8 tasks"
 - Description (sm, secondary, up to 2 lines)
@@ -501,6 +506,7 @@ When a goal reaches 100% completion, the GoalCard briefly animates with a subtle
 The native header shows "Goal" as the title with a back arrow. The screen content is a FlatList where the ListHeaderComponent is the goal detail card, followed by linked tasks.
 
 The Goal Detail Card occupies the full width with lg padding and features a 4px colored left border in the goal's custom color. Inside the card:
+
 - A header row with the goal title (xxl, bold, dark) and a "Delete" text button (danger color) on the right
 - Description text below (md, secondary)
 - A progress section with a label "Progress (X/Y tasks)" and a ProgressBar (8px height) in the goal's color
@@ -553,6 +559,7 @@ Instead of a flat task list below the goal card, display linked tasks grouped in
 The GoalFormModal follows the same Modal pattern as TaskFormModal: overlay, white sheet, header with title ("New Goal" / "Edit Goal") and close button, scrollable body, footer with Cancel + Save buttons.
 
 Form fields in order:
+
 1. **Name** — required, single-line TextInput, placeholder "e.g. Launch MVP"
 2. **Description** — optional, multiline, placeholder "What does success look like?"
 3. **Target Date** — touchable input that opens the native date picker
@@ -644,6 +651,7 @@ The native header reads "Habits." The FAB floats at bottom-right. The main conte
 **Recommended enhancement:** Add a category filter row at the top — horizontal scrollable chips (All, then each category). This lets users quickly filter habits by category. Also add a sort toggle between "By Streak" (highest streak first — gamification) and "By Name" (alphabetical).
 
 Each HabitRow displays:
+
 - A checkbox (24px square, bordered, filled green when done)
 - Title (md, medium, strikethrough + muted when done)
 - Description (xs, secondary, 1 line)
@@ -743,6 +751,7 @@ As the user fills in the form, a live preview card at the bottom of the modal sh
 The native header reads "Categories." The FAB floats at bottom-right. The main content is a FlatList of category cards.
 
 Each category card is a white Card component containing a horizontal row:
+
 - A small color circle (12px, filled with the category's color) on the left
 - Category name (md, semibold) and scope label (xs, muted, capitalized: "both" / "task" / "habit")
 - An "Edit" text button (primary blue, sm) and an "✕" delete button (danger red) on the right
@@ -791,28 +800,33 @@ When viewing a category, show a "Quick Assign" section below it: a compact list 
 The AnalyticsScreen is a scrollable dashboard of charts and statistics. The native header reads "Analytics." The screen is divided into card-based sections, each with its own white Card component and section title.
 
 **Section 1: Habit Overview Card**
+
 - Title: "Habit Consistency"
 - A 7-day horizontal bar chart showing daily completion percentage
 - Each bar is colored by completion rate (red < 50%, amber 50-80%, green > 80%)
 - Below the chart: "Longest active streak: 14 days 🔥" and "Average completion: 72%"
 
 **Section 2: Task Trends Card**
+
 - Title: "Task Trends (Last 30 Days)"
 - A line chart showing tasks created vs. tasks completed per day
 - Two lines: blue for created, green for completed
 - Summary stats below: "Total completed: 47," "Completion rate: 68%," "Avg tasks/day: 3.2"
 
 **Section 3: Goal Progress Card**
+
 - Title: "Goal Progress"
 - A stacked list of active goals, each with a ProgressBar and percentage
 - Sorted by least-to-most progress (closest to completion first)
 
 **Section 4: Weekly Heatmap Card**
+
 - Title: "Activity Heatmap"
 - A GitHub-style contribution grid: 7 rows (days of week) × ~12 columns (weeks)
 - Cell color intensity based on total actions (habit completions + task completions) per day
 
 **Section 5: Category Distribution Card**
+
 - Title: "Where Your Time Goes"
 - A horizontal stacked bar or donut-chart-like label list showing how tasks/habits distribute across categories
 
@@ -861,19 +875,23 @@ At the very top of the AnalyticsScreen, before any charts, show a "Your Week in 
 The SettingsScreen is accessed from the More tab and has a native header reading "Settings." The content is a ScrollView of grouped settings rows, each group separated by a section title and contained within a white Card.
 
 **Section 1: Notifications**
+
 - "Daily Reminder" — toggle switch with description "Get reminded to complete your habits" and a time picker sub-row (only visible when toggled on)
 - "Evening Nudge" — toggle switch with description "Alert if habits are at risk after 5 PM"
 - "Streak Alerts" — toggle switch with description "Celebrate when you hit streak milestones"
 
 **Section 2: Appearance**
+
 - "Theme" — row with three options displayed as selectable cards: Light, Dark, System. Currently selected card has a primary border.
 - "Default Task View" — row with three pill options: "All Tasks" / "Today Only" / "This Week"
 
 **Section 3: Data**
+
 - "Export Data" — button row, opens share sheet with JSON export
 - "Clear All Data" — danger-styled button, requires double confirmation (two alerts)
 
 **Section 4: About**
+
 - App version text (xs, muted)
 - "Privacy Policy" link
 - "Terms of Service" link
@@ -923,6 +941,7 @@ Add a "Focus Mode" card at the top of Settings. When enabled, it hides all analy
 The WeeklyPlanningScreen is a planning tool for scheduling backlog tasks across a week. The native header reads "Weekly Plan" with the current week range as a subtitle (e.g., "Apr 27 – May 3, 2026").
 
 The main layout is a horizontal ScrollView containing 7 day columns, each occupying roughly 70% of the screen width so part of the next column is always visible (carousel-style). Each column has:
+
 - Day name and date at the top (e.g., "Mon 27")
 - A "Capacity Bar" — a vertical progress bar showing how many tasks are already scheduled vs. a user-set daily capacity (default 5 tasks). Green if under capacity, amber if nearly full, red if over capacity.
 - A list of tasks already scheduled for that day, rendered as compact cards with title and priority dot
@@ -982,41 +1001,41 @@ After tapping "Get Started," instead of an abrupt transition, the screen perform
 
 ## Consistency Audit Across All Screens
 
-| Pattern | Applied consistently? |
-|---------|----------------------|
-| Screen padding (lg=16px) | ✅ All content areas use lg horizontal padding |
-| Card style (white, radius md, shadow) | ✅ All cards across all screens |
-| Section headers (title left, action right) | ✅ Cockpit, GoalDetail, Analytics |
-| Form modals (Modal + header + ScrollView + footer) | ✅ TaskFormModal, HabitFormModal, GoalFormModal |
-| Empty states (icon + title + subtitle) | ✅ All screens |
-| Loading states (LoadingSpinner with contextual message) | ✅ All screens |
-| Error states (EmptyState with ⚠️ + retry guidance) | ✅ All screens |
-| FAB (56px, primary, bottom-right, "+" icon) | ✅ Present on 8 screens where creation is primary |
-| Option pills (border, border-radius full, primary fill when active) | ✅ TaskFormModal, HabitFormModal, SettingsScreen |
-| Color palette (COLORS array, 7 colors) | ✅ Used consistently for all color pickers |
-| Typography hierarchy (heading/xxl/xl/lg/md/sm/xs) | ✅ Used consistently everywhere |
+| Pattern                                                             | Applied consistently?                             |
+| ------------------------------------------------------------------- | ------------------------------------------------- |
+| Screen padding (lg=16px)                                            | ✅ All content areas use lg horizontal padding    |
+| Card style (white, radius md, shadow)                               | ✅ All cards across all screens                   |
+| Section headers (title left, action right)                          | ✅ Cockpit, GoalDetail, Analytics                 |
+| Form modals (Modal + header + ScrollView + footer)                  | ✅ TaskFormModal, HabitFormModal, GoalFormModal   |
+| Empty states (icon + title + subtitle)                              | ✅ All screens                                    |
+| Loading states (LoadingSpinner with contextual message)             | ✅ All screens                                    |
+| Error states (EmptyState with ⚠️ + retry guidance)                  | ✅ All screens                                    |
+| FAB (56px, primary, bottom-right, "+" icon)                         | ✅ Present on 8 screens where creation is primary |
+| Option pills (border, border-radius full, primary fill when active) | ✅ TaskFormModal, HabitFormModal, SettingsScreen  |
+| Color palette (COLORS array, 7 colors)                              | ✅ Used consistently for all color pickers        |
+| Typography hierarchy (heading/xxl/xl/lg/md/sm/xs)                   | ✅ Used consistently everywhere                   |
 
 ---
 
 ## Summary of Creative Ideas Per Screen
 
-| Screen | Creative Idea |
-|--------|---------------|
-| 1. OnboardingScreen | Personality picker quiz pre-populates sample data |
-| 2. DailyCockpitScreen | "Momentum Pulse" thin progress line at top |
-| 3. TaskDetailScreen | Quick-note swipe-in for inline description editing |
-| 4. TaskFormModal | Swipe gestures on priority/status chips |
-| 5. MonthlyCalendarScreen | Past-day red/green subtle tint heatmap |
-| 6. DateDetailScreen | "Morning Brief" contextual summary card |
-| 7. BacklogScreen | "Weekend Sweep" Friday planning prompt |
-| 8. GoalsListScreen | Confetti burst on goal completion |
-| 9. GoalDetailScreen | Vertical milestone timeline for linked tasks |
-| 10. GoalFormModal | Goal template chips (Fitness/Career/Learning) |
-| 11. GoalTaskLinkModal | Smart-suggested tasks row |
-| 12. HabitsListScreen | Streak freeze mechanic (1 freeze earned per week) |
-| 13. HabitFormModal | Live preview card of the habit as you create it |
-| 14. CategoriesScreen | Quick-assign section for uncategorized items |
-| 15. AnalyticsScreen | Narrative "Your Week in Review" summary card |
-| 16. SettingsScreen | Focus Mode toggle (hide all numbers/gamification) |
-| 17. WeeklyPlanningScreen | Drag-and-drop task scheduling with spring animation |
-| 18. OnboardingScreen (refined) | Gradient background + curtain-reveal transition |
+| Screen                         | Creative Idea                                       |
+| ------------------------------ | --------------------------------------------------- |
+| 1. OnboardingScreen            | Personality picker quiz pre-populates sample data   |
+| 2. DailyCockpitScreen          | "Momentum Pulse" thin progress line at top          |
+| 3. TaskDetailScreen            | Quick-note swipe-in for inline description editing  |
+| 4. TaskFormModal               | Swipe gestures on priority/status chips             |
+| 5. MonthlyCalendarScreen       | Past-day red/green subtle tint heatmap              |
+| 6. DateDetailScreen            | "Morning Brief" contextual summary card             |
+| 7. BacklogScreen               | "Weekend Sweep" Friday planning prompt              |
+| 8. GoalsListScreen             | Confetti burst on goal completion                   |
+| 9. GoalDetailScreen            | Vertical milestone timeline for linked tasks        |
+| 10. GoalFormModal              | Goal template chips (Fitness/Career/Learning)       |
+| 11. GoalTaskLinkModal          | Smart-suggested tasks row                           |
+| 12. HabitsListScreen           | Streak freeze mechanic (1 freeze earned per week)   |
+| 13. HabitFormModal             | Live preview card of the habit as you create it     |
+| 14. CategoriesScreen           | Quick-assign section for uncategorized items        |
+| 15. AnalyticsScreen            | Narrative "Your Week in Review" summary card        |
+| 16. SettingsScreen             | Focus Mode toggle (hide all numbers/gamification)   |
+| 17. WeeklyPlanningScreen       | Drag-and-drop task scheduling with spring animation |
+| 18. OnboardingScreen (refined) | Gradient background + curtain-reveal transition     |

@@ -24,6 +24,7 @@ import Button from "../../../components/ui/Button";
 import TaskRow from "../../tasks/components/TaskRow";
 import TaskFormModal from "../../tasks/components/TaskFormModal";
 import { Task, TaskCreatePayload } from "../../../types";
+import { AppIcon, icons } from "../../../components/ui/Icon";
 
 type GoalDetailRouteProp = RouteProp<MoreStackParamList, "GoalDetail">;
 type GoalDetailNavProp = NativeStackNavigationProp<MoreStackParamList, "GoalDetail">;
@@ -46,6 +47,8 @@ const GoalDetailScreen: React.FC = () => {
   const [addModalVisible, setAddModalVisible] = useState(false);
   const [linkExistingVisible, setLinkExistingVisible] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [linking, setLinking] = useState(false);
+  const [selectedTaskIds, setSelectedTaskIds] = useState<Set<string>>(new Set());
 
   const linkedTaskIds = useMemo(() => new Set((tasks || []).map((t) => t.id)), [tasks]);
   const unlinkedTasks = useMemo(
@@ -136,22 +139,57 @@ const GoalDetailScreen: React.FC = () => {
     ]);
   }, [goalId, deleteGoal, navigation]);
 
-  const handleLinkExistingTask = useCallback(
-    (taskId: string) => {
-      linkTask.mutate(
-        { goalId, taskId },
-        {
-          onSuccess: () => {
-            setLinkExistingVisible(false);
-            refetchTasks();
-            refetchGoal();
-          },
-          onError: (e: unknown) => Alert.alert("Error", getErrorMessage(e, "Failed to link task")),
-        }
+  const toggleTaskSelection = useCallback((taskId: string) => {
+    setSelectedTaskIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(taskId)) {
+        next.delete(taskId);
+      } else {
+        next.add(taskId);
+      }
+      return next;
+    });
+  }, []);
+
+  const selectAllTasks = useCallback(() => {
+    if (selectedTaskIds.size === unlinkedTasks.length) {
+      setSelectedTaskIds(new Set());
+    } else {
+      setSelectedTaskIds(new Set(unlinkedTasks.map((t) => t.id)));
+    }
+  }, [unlinkedTasks, selectedTaskIds.size]);
+
+  const handleLinkSelectedTasks = useCallback(async () => {
+    if (selectedTaskIds.size === 0) return;
+    setLinking(true);
+    const taskIds = Array.from(selectedTaskIds);
+    let successCount = 0;
+    let failCount = 0;
+    for (const taskId of taskIds) {
+      try {
+        await linkTask.mutateAsync({ goalId, taskId });
+        successCount++;
+      } catch {
+        failCount++;
+      }
+    }
+    setLinking(false);
+    setSelectedTaskIds(new Set());
+    setLinkExistingVisible(false);
+    refetchTasks();
+    refetchGoal();
+    if (failCount > 0) {
+      Alert.alert(
+        "Partially complete",
+        `Linked ${successCount} task${successCount !== 1 ? "s" : ""}. ${failCount} failed.`,
       );
-    },
-    [goalId, linkTask, refetchTasks, refetchGoal]
-  );
+    }
+  }, [selectedTaskIds, goalId, linkTask, refetchTasks, refetchGoal]);
+
+  const openLinkModal = useCallback(() => {
+    setSelectedTaskIds(new Set());
+    setLinkExistingVisible(true);
+  }, []);
 
   if (isLoading) return <LoadingSpinner message="Loading goal..." />;
   if (isError || !goal) return <EmptyState icon="warning" title="Goal not found" subtitle="It may have been deleted" />;
@@ -197,7 +235,7 @@ const GoalDetailScreen: React.FC = () => {
                 <Button
                   title="Link Existing"
                   variant="secondary"
-                  onPress={() => setLinkExistingVisible(true)}
+                  onPress={openLinkModal}
                   style={{ paddingVertical: 6, paddingHorizontal: 12 }}
                 />
                 <Button
@@ -235,35 +273,98 @@ const GoalDetailScreen: React.FC = () => {
         saving={saving}
       />
 
-      {/* Link Existing Task Modal */}
-      <RNModal visible={linkExistingVisible} transparent animationType="fade" onRequestClose={() => setLinkExistingVisible(false)}>
+      {/* Link Existing Tasks Modal - Multi Select */}
+      <RNModal visible={linkExistingVisible} transparent animationType="fade" onRequestClose={() => {
+        if (!linking) {
+          setLinkExistingVisible(false);
+          setSelectedTaskIds(new Set());
+        }
+      }}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Link Existing Task</Text>
-              <TouchableOpacity onPress={() => setLinkExistingVisible(false)} style={styles.closeBtn}>
-                <Text style={styles.closeBtnText}>✕</Text>
+              <TouchableOpacity
+                onPress={() => {
+                  setLinkExistingVisible(false);
+                  setSelectedTaskIds(new Set());
+                }}
+                style={styles.closeBtn}
+                disabled={linking}
+              >
+                <AppIcon name={icons.x} size={20} color={theme.colors.textMuted} />
               </TouchableOpacity>
             </View>
+
             {unlinkedTasks.length === 0 ? (
-              <EmptyState icon="clipboard" title="No available tasks" subtitle="All tasks are already linked or no tasks exist" />
+              <View style={styles.modalEmptyState}>
+                <EmptyState icon="clipboard" title="No available tasks" subtitle="All tasks are already linked or no tasks exist" />
+              </View>
             ) : (
-              <FlatList
-                data={unlinkedTasks}
-                keyExtractor={(item) => item.id}
-                renderItem={({ item }) => (
-                  <TouchableOpacity
-                    style={styles.taskOption}
-                    onPress={() => handleLinkExistingTask(item.id)}
-                    activeOpacity={0.7}
-                  >
-                    <View style={styles.taskOptionCheckbox} />
-                    <Text style={styles.taskOptionTitle} numberOfLines={1}>{item.title}</Text>
-                    <Text style={styles.taskOptionStatus}>{item.status}</Text>
+              <>
+                <View style={styles.modalToolbar}>
+                  <TouchableOpacity onPress={selectAllTasks} style={styles.selectAllBtn}>
+                    {selectedTaskIds.size === unlinkedTasks.length ? (
+                      <AppIcon name={icons.check} size={16} color={theme.colors.primary} />
+                    ) : (
+                      <AppIcon name={icons.check} size={16} color={theme.colors.textMuted} />
+                    )}
+                    <Text style={styles.selectAllText}>
+                      {selectedTaskIds.size === unlinkedTasks.length ? "Deselect All" : "Select All"}
+                    </Text>
                   </TouchableOpacity>
-                )}
-                contentContainerStyle={styles.taskListContent}
-              />
+                  {selectedTaskIds.size > 0 && (
+                    <Text style={styles.selectionCount}>
+                      {selectedTaskIds.size} selected
+                    </Text>
+                  )}
+                </View>
+                <FlatList
+                  data={unlinkedTasks}
+                  keyExtractor={(item) => item.id}
+                  renderItem={({ item }) => {
+                    const isSelected = selectedTaskIds.has(item.id);
+                    return (
+                      <TouchableOpacity
+                        style={[styles.taskOption, isSelected && styles.taskOptionSelected]}
+                        onPress={() => toggleTaskSelection(item.id)}
+                        activeOpacity={0.6}
+                        disabled={linking}
+                      >
+                        <View style={[styles.taskOptionCheckbox, isSelected && styles.taskOptionCheckboxSelected]}>
+                          {isSelected && <AppIcon name={icons.check} size={14} color="#FFF" />}
+                        </View>
+                        <View style={styles.taskOptionInfo}>
+                          <Text style={[styles.taskOptionTitle, isSelected && styles.taskOptionTitleSelected]} numberOfLines={1}>{item.title}</Text>
+                        </View>
+                        <Text style={[styles.taskOptionStatus, isSelected && styles.taskOptionStatusSelected]}>
+                          {item.status === "done" ? "Done" : item.status === "in_progress" ? "In Progress" : "Todo"}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  }}
+                  contentContainerStyle={styles.taskListContent}
+                />
+                <View style={styles.modalFooter}>
+                  <Button
+                    title="Cancel"
+                    variant="ghost"
+                    onPress={() => {
+                      setLinkExistingVisible(false);
+                      setSelectedTaskIds(new Set());
+                    }}
+                    disabled={linking}
+                    style={{ flex: 1 }}
+                  />
+                  <Button
+                    title={`Link${selectedTaskIds.size > 0 ? ` ${selectedTaskIds.size} Task${selectedTaskIds.size > 1 ? "s" : ""}` : ""}`}
+                    onPress={handleLinkSelectedTasks}
+                    loading={linking}
+                    disabled={selectedTaskIds.size === 0 || linking}
+                    style={{ flex: 2 }}
+                  />
+                </View>
+              </>
             )}
           </View>
         </View>
@@ -275,7 +376,7 @@ const GoalDetailScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.colors.background },
   listContent: { padding: theme.spacing.lg, paddingBottom: 100 },
-    goalCard: {
+  goalCard: {
     marginBottom: theme.spacing.xl,
     borderLeftWidth: 4,
   },
@@ -338,13 +439,13 @@ const styles = StyleSheet.create({
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.5)",
-    justifyContent: "center",
-    paddingHorizontal: theme.spacing.xl,
+    justifyContent: "flex-end",
   },
   modalContent: {
     backgroundColor: theme.colors.surface,
-    borderRadius: theme.borderRadius.lg,
-    maxHeight: "70%",
+    borderTopLeftRadius: theme.borderRadius.xl,
+    borderTopRightRadius: theme.borderRadius.xl,
+    maxHeight: "75%",
   },
   modalHeader: {
     flexDirection: "row",
@@ -352,7 +453,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: theme.spacing.xl,
     paddingTop: theme.spacing.xl,
-    paddingBottom: theme.spacing.md,
+    paddingBottom: theme.spacing.lg,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border,
   },
   modalTitle: {
     fontSize: theme.fontSize.xl,
@@ -360,10 +463,35 @@ const styles = StyleSheet.create({
     color: theme.colors.textPrimary,
   },
   closeBtn: { padding: theme.spacing.xs },
-  closeBtnText: { fontSize: 18, color: theme.colors.textMuted },
+  modalEmptyState: {
+    padding: theme.spacing.xxl,
+  },
+  modalToolbar: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: theme.spacing.xl,
+    paddingVertical: theme.spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border,
+    backgroundColor: theme.colors.background,
+  },
+  selectAllBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: theme.spacing.xs,
+  },
+  selectAllText: {
+    fontSize: theme.fontSize.sm,
+    color: theme.colors.primary,
+    fontWeight: "600",
+  },
+  selectionCount: {
+    fontSize: theme.fontSize.xs,
+    color: theme.colors.textMuted,
+  },
   taskListContent: {
     paddingHorizontal: theme.spacing.xl,
-    paddingBottom: theme.spacing.xl,
   },
   taskOption: {
     flexDirection: "row",
@@ -372,23 +500,54 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border,
   },
+  taskOptionSelected: {
+    backgroundColor: theme.colors.primary + "10",
+  },
   taskOptionCheckbox: {
-    width: 20,
-    height: 20,
+    width: 22,
+    height: 22,
     borderRadius: theme.borderRadius.sm,
     borderWidth: 2,
     borderColor: theme.colors.border,
     marginRight: theme.spacing.md,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  taskOptionCheckboxSelected: {
+    backgroundColor: theme.colors.primary,
+    borderColor: theme.colors.primary,
+  },
+  taskOptionInfo: {
+    flex: 1,
   },
   taskOptionTitle: {
-    flex: 1,
     fontSize: theme.fontSize.md,
     color: theme.colors.textPrimary,
+  },
+  taskOptionTitleSelected: {
+    color: theme.colors.primary,
+    fontWeight: "500",
   },
   taskOptionStatus: {
     fontSize: theme.fontSize.xs,
     color: theme.colors.textMuted,
     textTransform: "capitalize",
+    marginLeft: theme.spacing.sm,
+    minWidth: 55,
+    textAlign: "right",
+  },
+  taskOptionStatusSelected: {
+    color: theme.colors.primary,
+  },
+  modalFooter: {
+    flexDirection: "row",
+    gap: theme.spacing.sm,
+    paddingHorizontal: theme.spacing.xl,
+    paddingTop: theme.spacing.lg,
+    paddingBottom: theme.spacing.xxl,
+    borderTopWidth: 1,
+    borderTopColor: theme.colors.border,
+    backgroundColor: theme.colors.background,
   },
 });
 

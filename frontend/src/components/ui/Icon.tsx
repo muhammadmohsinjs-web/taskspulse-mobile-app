@@ -7,7 +7,6 @@ import {
   Target,
   Calendar,
   Sparkles,
-  Flame,
   BarChart3,
   Settings,
   Search,
@@ -25,6 +24,10 @@ import {
   FileText,
   ArrowLeft,
   ArrowRight,
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
   type LucideIcon,
 } from "lucide-react-native";
 import { theme } from "../../theme/theme";
@@ -36,7 +39,6 @@ export type IconName =
   | "target"
   | "calendar"
   | "sparkles"
-  | "flame"
   | "chart"
   | "settings"
   | "search"
@@ -53,7 +55,11 @@ export type IconName =
   | "party"
   | "file"
   | "arrowLeft"
-  | "arrowRight";
+  | "arrowRight"
+  | "mail"
+  | "lock"
+  | "eye"
+  | "eyeOff";
 
 const ICON_MAP: Record<IconName, LucideIcon> = {
   warning: AlertTriangle,
@@ -62,7 +68,6 @@ const ICON_MAP: Record<IconName, LucideIcon> = {
   target: Target,
   calendar: Calendar,
   sparkles: Sparkles,
-  flame: Flame,
   chart: BarChart3,
   settings: Settings,
   search: Search,
@@ -80,6 +85,10 @@ const ICON_MAP: Record<IconName, LucideIcon> = {
   file: FileText,
   arrowLeft: ArrowLeft,
   arrowRight: ArrowRight,
+  mail: Mail,
+  lock: Lock,
+  eye: Eye,
+  eyeOff: EyeOff,
 };
 
 interface AppIconProps {
@@ -128,7 +137,6 @@ export const icons = {
   target: "target" as IconName,
   calendar: "calendar" as IconName,
   sparkles: "sparkles" as IconName,
-  flame: "flame" as IconName,
   chart: "chart" as IconName,
   settings: "settings" as IconName,
   search: "search" as IconName,
@@ -146,4 +154,8 @@ export const icons = {
   file: "file" as IconName,
   arrowLeft: "arrowLeft" as IconName,
   arrowRight: "arrowRight" as IconName,
+  mail: "mail" as IconName,
+  lock: "lock" as IconName,
+  eye: "eye" as IconName,
+  eyeOff: "eyeOff" as IconName,
 };

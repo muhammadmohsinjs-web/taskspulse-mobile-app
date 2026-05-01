@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { theme } from "../../../theme/theme";
-import { AppIcon, icons } from "../../../components/ui/Icon";
+import { FlameIcon } from "../../../components/ui/FlameIcon";
 
 interface StreakBadgeProps {
   currentStreak: number;
@@ -10,7 +10,7 @@ interface StreakBadgeProps {
 
 const StreakBadge: React.FC<StreakBadgeProps> = ({ currentStreak, longestStreak }) => (
   <View style={styles.container}>
-    <AppIcon name={icons.flame} size={24} color={theme.colors.streakActive} />
+    <FlameIcon size={28} />
     <Text style={styles.current}>{currentStreak}</Text>
     <Text style={styles.label}>day streak</Text>
     <Text style={styles.best}>

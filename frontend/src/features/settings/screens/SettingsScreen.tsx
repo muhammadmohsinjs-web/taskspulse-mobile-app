@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { theme } from "../../../theme/theme";
 import Card from "../../../components/ui/Card";
+import { useOnboarding } from "../../../navigation/RootNavigator";
 
 interface SettingRowProps {
   label: string;
@@ -37,6 +38,8 @@ const SettingRow: React.FC<SettingRowProps> = ({ label, value, onPress, danger }
 );
 
 const SettingsScreen: React.FC = () => {
+  const { restartOnboarding } = useOnboarding();
+
   const handleResetData = () => {
     Alert.alert(
       "Reset All Data",
@@ -47,6 +50,23 @@ const SettingsScreen: React.FC = () => {
           text: "Reset",
           style: "destructive",
           onPress: () => Alert.alert("Not implemented", "Data reset will be available in a future update."),
+        },
+      ]
+    );
+  };
+
+  const handleRestartOnboarding = () => {
+    Alert.alert(
+      "Restart Onboarding",
+      "This will take you back to the onboarding screen.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Restart",
+          style: "destructive",
+          onPress: async () => {
+            await restartOnboarding();
+          },
         },
       ]
     );
@@ -70,6 +90,12 @@ const SettingsScreen: React.FC = () => {
 
       <Text style={styles.sectionTitle}>Danger Zone</Text>
       <Card style={styles.card}>
+        <SettingRow
+          label="Restart Onboarding"
+          onPress={handleRestartOnboarding}
+          danger
+        />
+        <View style={styles.divider} />
         <SettingRow
           label="Reset All Data"
           onPress={handleResetData}
