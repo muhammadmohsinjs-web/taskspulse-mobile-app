@@ -17,6 +17,7 @@ import DateDetailScreen from "../features/calendar/screens/DateDetailScreen";
 import AnalyticsScreen from "../features/analytics/screens/AnalyticsScreen";
 import WeeklyPlanningScreen from "../features/planning/screens/WeeklyPlanningScreen";
 import SettingsScreen from "../features/settings/screens/SettingsScreen";
+import MoreScreen from "../features/more/screens/MoreScreen";
 
 const Tab = createBottomTabNavigator();
 const MoreStack = createNativeStackNavigator();
@@ -70,6 +71,11 @@ const CalendarStackNavigator = () => (
 
 const MoreStackNavigator = () => (
   <MoreStack.Navigator>
+    <MoreStack.Screen
+      name="MoreHome"
+      component={MoreScreen}
+      options={{ headerShown: false }}
+    />
     <MoreStack.Screen
       name="Categories"
       component={CategoriesScreen}
