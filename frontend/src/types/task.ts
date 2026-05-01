@@ -11,6 +11,7 @@ export interface Task {
   deletedAt: string | null;
   createdAt: string;
   updatedAt: string;
+  goalIds: string[];
 }
 
 export interface TaskRaw {
@@ -26,6 +27,7 @@ export interface TaskRaw {
   deleted_at: string | null;
   created_at: string;
   updated_at: string;
+  goal_ids: string[];
 }
 
 export function validateStatus(s: string): Task["status"] {
@@ -56,6 +58,7 @@ export function mapTask(raw: TaskRaw): Task {
     deletedAt: raw.deleted_at,
     createdAt: raw.created_at,
     updatedAt: raw.updated_at,
+    goalIds: raw.goal_ids || [],
   };
 }
 

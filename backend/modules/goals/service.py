@@ -113,6 +113,8 @@ def delete_goal(db: Session, goal_id: str) -> bool:
     goal = db.query(Goal).filter(Goal.id == goal_id, Goal.deleted_at.is_(None)).first()
     if not goal:
         return False
+    # Clean up orphaned links before soft-deleting
+    db.query(GoalTaskLink).filter(GoalTaskLink.goal_id == goal_id).delete()
     goal.deleted_at = datetime.now(timezone.utc).isoformat()
     db.commit()
     return True

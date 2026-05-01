@@ -314,7 +314,7 @@ const WeeklyPlanningScreen: React.FC = () => {
 
           {/* Day columns */}
           {isError ? (
-            <EmptyState icon="⚠️" title="Couldn't load week" subtitle="Pull down to retry" />
+            <EmptyState icon="warning" title="Couldn't load week" subtitle="Pull down to retry" />
           ) : weekView ? (
             <View>
               <ScrollView
@@ -343,7 +343,7 @@ const WeeklyPlanningScreen: React.FC = () => {
               )}
             </View>
           ) : (
-            <EmptyState icon="📅" title="No tasks" subtitle="Add tasks with due dates to see your week" />
+            <EmptyState icon="calendar" title="No tasks" subtitle="Add tasks with due dates to see your week" />
           )}
         </>
       ) : (
@@ -353,9 +353,9 @@ const WeeklyPlanningScreen: React.FC = () => {
               <LoadingSpinner message="Loading focus queue..." />
             </View>
           ) : !focusQueue ? (
-            <EmptyState icon="⚠️" title="Couldn't load focus queue" subtitle="Pull down to retry" />
+            <EmptyState icon="warning" title="Couldn't load focus queue" subtitle="Pull down to retry" />
           ) : focusQueue.totalPending === 0 ? (
-            <EmptyState icon="🎯" title="All caught up!" subtitle="No pending tasks. Great work." />
+            <EmptyState icon="target" title="All caught up!" subtitle="No pending tasks. Great work." />
           ) : (
             <View style={styles.focusContent}>
               {focusQueue.overdue.length > 0 && (

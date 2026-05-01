@@ -1,16 +1,19 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { theme } from "../../theme/theme";
+import { AppIcon, type IconName } from "./Icon";
 
 interface EmptyStateProps {
-  icon?: string;
+  icon?: IconName;
   title: string;
   subtitle?: string;
 }
 
-const EmptyState: React.FC<EmptyStateProps> = ({ icon = "📋", title, subtitle }) => (
+const EmptyState: React.FC<EmptyStateProps> = ({ icon = "clipboard", title, subtitle }) => (
   <View style={styles.container}>
-    <Text style={styles.icon}>{icon}</Text>
+    <View style={styles.iconWrap}>
+      <AppIcon name={icon} size={48} color={theme.colors.textMuted} />
+    </View>
     <Text style={styles.title}>{title}</Text>
     {subtitle && <Text style={styles.subtitle}>{subtitle}</Text>}
   </View>
@@ -23,7 +26,9 @@ const styles = StyleSheet.create({
     paddingVertical: theme.spacing.xxxl * 2,
     paddingHorizontal: theme.spacing.xl,
   },
-  icon: { fontSize: 48, marginBottom: theme.spacing.lg },
+  iconWrap: {
+    marginBottom: theme.spacing.lg,
+  },
   title: {
     fontSize: theme.fontSize.lg,
     fontWeight: "600",

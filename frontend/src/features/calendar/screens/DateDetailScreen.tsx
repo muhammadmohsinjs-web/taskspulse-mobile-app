@@ -246,9 +246,9 @@ const DateDetailScreen: React.FC = () => {
         }}
         ListEmptyComponent={
           isError ? (
-            <EmptyState icon="⚠️" title="Couldn't load tasks" subtitle="Pull down to retry" />
+            <EmptyState icon="warning" title="Couldn't load tasks" subtitle="Pull down to retry" />
           ) : (
-            <EmptyState icon="📅" title="No tasks for this day" subtitle="Tap + to add one" />
+            <EmptyState icon="calendar" title="No tasks for this day" subtitle="Tap + to add one" />
           )
         }
         contentContainerStyle={styles.listContent}

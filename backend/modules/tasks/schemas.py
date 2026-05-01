@@ -36,5 +36,6 @@ class TaskOut(BaseModel):
     deleted_at: str | None = None
     created_at: datetime
     updated_at: datetime
+    goal_ids: list[str] = []
 
     model_config = {"from_attributes": True}

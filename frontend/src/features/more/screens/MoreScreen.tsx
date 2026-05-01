@@ -4,6 +4,7 @@ import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { theme } from "../../../theme/theme";
 import Card from "../../../components/ui/Card";
+import { AppIcon, icons } from "../../../components/ui/Icon";
 
 type MoreStackParamList = {
   Categories: undefined;
@@ -19,7 +20,7 @@ interface MenuItem {
   id: string;
   title: string;
   subtitle: string;
-  icon: string;
+  iconName: keyof typeof icons;
   screen: keyof MoreStackParamList;
 }
 
@@ -28,35 +29,35 @@ const MENU_ITEMS: MenuItem[] = [
     id: "categories",
     title: "Categories",
     subtitle: "Organize habits and tasks",
-    icon: "🏷️",
+    iconName: "tag",
     screen: "Categories",
   },
   {
     id: "goals",
     title: "Goals",
     subtitle: "Track long-term objectives",
-    icon: "🎯",
+    iconName: "target",
     screen: "GoalsList",
   },
   {
     id: "analytics",
     title: "Analytics",
     subtitle: "View your progress insights",
-    icon: "📊",
+    iconName: "chart",
     screen: "Analytics",
   },
   {
     id: "weekly-planning",
     title: "Weekly Planning",
     subtitle: "Plan your week ahead",
-    icon: "📋",
+    iconName: "list",
     screen: "WeeklyPlanning",
   },
   {
     id: "settings",
     title: "Settings",
     subtitle: "App preferences and data",
-    icon: "⚙️",
+    iconName: "settings",
     screen: "Settings",
   },
 ];
@@ -71,12 +72,14 @@ const MoreScreen: React.FC = () => {
     >
       <Card style={styles.card}>
         <View style={styles.row}>
-          <Text style={styles.icon}>{item.icon}</Text>
+          <View style={styles.iconWrap}>
+            <AppIcon name={item.iconName} size={22} color={theme.colors.primary} />
+          </View>
           <View style={styles.content}>
             <Text style={styles.title}>{item.title}</Text>
             <Text style={styles.subtitle}>{item.subtitle}</Text>
           </View>
-          <Text style={styles.chevron}>›</Text>
+          <AppIcon name="chevron" size={20} color={theme.colors.textMuted} />
         </View>
       </Card>
     </TouchableOpacity>
@@ -111,7 +114,15 @@ const styles = StyleSheet.create({
   },
   card: { marginBottom: theme.spacing.sm },
   row: { flexDirection: "row", alignItems: "center" },
-  icon: { fontSize: 24, marginRight: theme.spacing.md },
+  iconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: theme.colors.primary + "15",
+    alignItems: "center",
+    justifyContent: "center",
+    marginRight: theme.spacing.md,
+  },
   content: { flex: 1 },
   title: {
     fontSize: theme.fontSize.md,
@@ -122,11 +133,6 @@ const styles = StyleSheet.create({
     fontSize: theme.fontSize.xs,
     color: theme.colors.textMuted,
     marginTop: 2,
-  },
-  chevron: {
-    fontSize: theme.fontSize.xl,
-    color: theme.colors.textMuted,
-    fontWeight: "300",
   },
 });
 

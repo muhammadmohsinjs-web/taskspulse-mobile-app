@@ -132,9 +132,9 @@ const CategoriesScreen: React.FC = () => {
         )}
         ListEmptyComponent={
           isError ? (
-            <EmptyState icon="⚠️" title="Couldn't load categories" subtitle="Pull down to retry" />
+            <EmptyState icon="warning" title="Couldn't load categories" subtitle="Pull down to retry" />
           ) : (
-            <EmptyState icon="🏷️" title="No categories" subtitle="Categories help organize habits and tasks" />
+            <EmptyState icon="tag" title="No categories" subtitle="Categories help organize habits and tasks" />
           )
         }
         contentContainerStyle={styles.listContent}

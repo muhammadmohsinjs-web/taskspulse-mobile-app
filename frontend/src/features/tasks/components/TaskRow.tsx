@@ -4,6 +4,7 @@ import { theme } from "../../../theme/theme";
 import { formatShortDate } from "../../../utils/date";
 import Badge from "../../../components/ui/Badge";
 import { Task } from "../../../types";
+import { AppIcon, icons } from "../../../components/ui/Icon";
 
 interface TaskRowProps {
   task: Task;
@@ -45,6 +46,12 @@ const TaskRow: React.FC<TaskRowProps> = ({ task, onToggle, onPress, onLongPress 
           )}
           {task.dueDate && (
             <Text style={styles.dueDate}>{formatShortDate(task.dueDate)}</Text>
+          )}
+          {task.goalIds.length > 0 && (
+            <View style={styles.goalBadge}>
+              <AppIcon name={icons.target} size={12} color={theme.colors.textSecondary} />
+              <Text style={styles.goalCount}>{task.goalIds.length}</Text>
+            </View>
           )}
           {isDone && (
             <Text style={styles.doneLabel}>Done</Text>
@@ -111,6 +118,16 @@ const styles = StyleSheet.create({
   doneLabel: {
     fontSize: theme.fontSize.xs,
     color: theme.colors.success,
+    fontWeight: "500",
+  },
+  goalBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 2,
+  },
+  goalCount: {
+    fontSize: theme.fontSize.xs,
+    color: theme.colors.textSecondary,
     fontWeight: "500",
   },
 });

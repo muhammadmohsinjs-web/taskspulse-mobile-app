@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   StyleSheet,
   TouchableOpacity,
   Alert,
+  Modal as RNModal,
 } from "react-native";
 import { useRoute, useNavigation, RouteProp } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
@@ -14,7 +15,7 @@ import { useRefreshControl } from "../../../hooks/useRefreshControl";
 import { getErrorMessage } from "../../../utils/error";
 import { MoreStackParamList } from "../../../types";
 import { useGoal, useGoalTasks, useLinkTaskToGoal, useUnlinkTaskFromGoal, useDeleteGoal } from "../hooks/useGoals";
-import { useCreateTask, useUpdateTask, useDeleteTask } from "../../tasks/hooks/useTasks";
+import { useTasks, useCreateTask, useUpdateTask, useDeleteTask } from "../../tasks/hooks/useTasks";
 import ProgressBar from "../../../components/ui/ProgressBar";
 import Card from "../../../components/ui/Card";
 import LoadingSpinner from "../../../components/ui/LoadingSpinner";
@@ -34,6 +35,7 @@ const GoalDetailScreen: React.FC = () => {
 
   const { data: goal, isLoading, isError, refetch: refetchGoal } = useGoal(goalId);
   const { data: tasks, refetch: refetchTasks } = useGoalTasks(goalId);
+  const { data: allTasks } = useTasks();
   const createTask = useCreateTask();
   const updateTask = useUpdateTask();
   const deleteTask = useDeleteTask();
@@ -42,7 +44,14 @@ const GoalDetailScreen: React.FC = () => {
   const deleteGoal = useDeleteGoal();
 
   const [addModalVisible, setAddModalVisible] = useState(false);
+  const [linkExistingVisible, setLinkExistingVisible] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  const linkedTaskIds = useMemo(() => new Set((tasks || []).map((t) => t.id)), [tasks]);
+  const unlinkedTasks = useMemo(
+    () => (allTasks || []).filter((t) => !linkedTaskIds.has(t.id)),
+    [allTasks, linkedTaskIds]
+  );
 
   const handleRefresh = useCallback(
     async () => { await Promise.all([refetchGoal(), refetchTasks()]); },
@@ -127,8 +136,25 @@ const GoalDetailScreen: React.FC = () => {
     ]);
   }, [goalId, deleteGoal, navigation]);
 
+  const handleLinkExistingTask = useCallback(
+    (taskId: string) => {
+      linkTask.mutate(
+        { goalId, taskId },
+        {
+          onSuccess: () => {
+            setLinkExistingVisible(false);
+            refetchTasks();
+            refetchGoal();
+          },
+          onError: (e: unknown) => Alert.alert("Error", getErrorMessage(e, "Failed to link task")),
+        }
+      );
+    },
+    [goalId, linkTask, refetchTasks, refetchGoal]
+  );
+
   if (isLoading) return <LoadingSpinner message="Loading goal..." />;
-  if (isError || !goal) return <EmptyState icon="⚠️" title="Goal not found" subtitle="It may have been deleted" />;
+  if (isError || !goal) return <EmptyState icon="warning" title="Goal not found" subtitle="It may have been deleted" />;
 
   const goalCardStyle: import("react-native").ViewStyle = {
     ...styles.goalCard,
@@ -167,7 +193,20 @@ const GoalDetailScreen: React.FC = () => {
 
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Linked Tasks</Text>
-              <Button title="+ Add Task" variant="secondary" onPress={() => setAddModalVisible(true)} style={{ paddingVertical: 6, paddingHorizontal: 12 }} />
+              <View style={styles.actionButtons}>
+                <Button
+                  title="Link Existing"
+                  variant="secondary"
+                  onPress={() => setLinkExistingVisible(true)}
+                  style={{ paddingVertical: 6, paddingHorizontal: 12 }}
+                />
+                <Button
+                  title="+ Add Task"
+                  variant="secondary"
+                  onPress={() => setAddModalVisible(true)}
+                  style={{ paddingVertical: 6, paddingHorizontal: 12 }}
+                />
+              </View>
             </View>
           </View>
         }
@@ -182,7 +221,7 @@ const GoalDetailScreen: React.FC = () => {
           </View>
         )}
         ListEmptyComponent={
-          <EmptyState icon="📋" title="No linked tasks" subtitle="Tap Add Task to link a task to this goal" />
+          <EmptyState icon="clipboard" title="No linked tasks" subtitle="Tap Add Task to link a task to this goal" />
         }
         contentContainerStyle={styles.listContent}
         refreshControl={refreshControl}
@@ -195,6 +234,40 @@ const GoalDetailScreen: React.FC = () => {
         onSave={handleLinkNewTask}
         saving={saving}
       />
+
+      {/* Link Existing Task Modal */}
+      <RNModal visible={linkExistingVisible} transparent animationType="fade" onRequestClose={() => setLinkExistingVisible(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Link Existing Task</Text>
+              <TouchableOpacity onPress={() => setLinkExistingVisible(false)} style={styles.closeBtn}>
+                <Text style={styles.closeBtnText}>✕</Text>
+              </TouchableOpacity>
+            </View>
+            {unlinkedTasks.length === 0 ? (
+              <EmptyState icon="clipboard" title="No available tasks" subtitle="All tasks are already linked or no tasks exist" />
+            ) : (
+              <FlatList
+                data={unlinkedTasks}
+                keyExtractor={(item) => item.id}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    style={styles.taskOption}
+                    onPress={() => handleLinkExistingTask(item.id)}
+                    activeOpacity={0.7}
+                  >
+                    <View style={styles.taskOptionCheckbox} />
+                    <Text style={styles.taskOptionTitle} numberOfLines={1}>{item.title}</Text>
+                    <Text style={styles.taskOptionStatus}>{item.status}</Text>
+                  </TouchableOpacity>
+                )}
+                contentContainerStyle={styles.taskListContent}
+              />
+            )}
+          </View>
+        </View>
+      </RNModal>
     </View>
   );
 };
@@ -253,10 +326,69 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: theme.spacing.md,
   },
+  actionButtons: {
+    flexDirection: "row",
+    gap: theme.spacing.sm,
+  },
   sectionTitle: {
     fontSize: theme.fontSize.lg,
     fontWeight: "600",
     color: theme.colors.textPrimary,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    justifyContent: "center",
+    paddingHorizontal: theme.spacing.xl,
+  },
+  modalContent: {
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.borderRadius.lg,
+    maxHeight: "70%",
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: theme.spacing.xl,
+    paddingTop: theme.spacing.xl,
+    paddingBottom: theme.spacing.md,
+  },
+  modalTitle: {
+    fontSize: theme.fontSize.xl,
+    fontWeight: "700",
+    color: theme.colors.textPrimary,
+  },
+  closeBtn: { padding: theme.spacing.xs },
+  closeBtnText: { fontSize: 18, color: theme.colors.textMuted },
+  taskListContent: {
+    paddingHorizontal: theme.spacing.xl,
+    paddingBottom: theme.spacing.xl,
+  },
+  taskOption: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: theme.spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border,
+  },
+  taskOptionCheckbox: {
+    width: 20,
+    height: 20,
+    borderRadius: theme.borderRadius.sm,
+    borderWidth: 2,
+    borderColor: theme.colors.border,
+    marginRight: theme.spacing.md,
+  },
+  taskOptionTitle: {
+    flex: 1,
+    fontSize: theme.fontSize.md,
+    color: theme.colors.textPrimary,
+  },
+  taskOptionStatus: {
+    fontSize: theme.fontSize.xs,
+    color: theme.colors.textMuted,
+    textTransform: "capitalize",
   },
 });
 

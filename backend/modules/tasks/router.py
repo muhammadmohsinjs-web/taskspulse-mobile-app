@@ -3,6 +3,9 @@ from sqlalchemy.orm import Session
 from database import get_db
 from modules.tasks.schemas import TaskCreate, TaskUpdate, TaskOut
 from modules.tasks import service
+from modules.goals.models import GoalTaskLink
+from modules.goals.schemas import GoalOut
+from modules.goals import service as goal_service
 
 router = APIRouter()
 
@@ -55,3 +58,17 @@ def update_existing_task(task_id: str, task: TaskUpdate, db: Session = Depends(g
 def delete_existing_task(task_id: str, db: Session = Depends(get_db)):
     if not service.delete_task(db, task_id):
         raise HTTPException(status_code=404, detail="Task not found")
+
+
+@router.get("/{task_id}/goals", response_model=list[GoalOut], summary="List goals linked to a task")
+def list_task_goals(task_id: str, db: Session = Depends(get_db)):
+    task = service.get_task(db, task_id)
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+    links = db.query(GoalTaskLink).filter(GoalTaskLink.task_id == task_id).all()
+    goal_ids = [link.goal_id for link in links]
+    if not goal_ids:
+        return []
+    from modules.goals.models import Goal
+    goals = db.query(Goal).filter(Goal.id.in_(goal_ids), Goal.deleted_at.is_(None)).all()
+    return [goal_service._goal_to_out(db, g) for g in goals]

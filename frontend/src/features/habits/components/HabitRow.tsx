@@ -2,6 +2,7 @@ import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { theme } from "../../../theme/theme";
 import { Habit } from "../../../types";
+import { AppIcon, icons } from "../../../components/ui/Icon";
 
 interface HabitRowProps {
   habit: Pick<Habit, "id" | "title" | "description" | "completedToday" | "currentStreak" | "color">;
@@ -40,7 +41,7 @@ const HabitRow: React.FC<HabitRowProps> = ({ habit, onToggle, onLongPress }) => 
           <Text style={[styles.streakText, { color: streakColor }]}>
             {habit.currentStreak}
           </Text>
-          <Text style={[styles.streakIcon, { color: streakColor }]}>🔥</Text>
+          <AppIcon name={icons.flame} size={12} color={streakColor} />
         </View>
       )}
     </TouchableOpacity>

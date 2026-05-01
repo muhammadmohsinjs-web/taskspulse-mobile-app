@@ -20,6 +20,7 @@ import FAB from "../../../components/ui/FAB";
 import LoadingSpinner from "../../../components/ui/LoadingSpinner";
 import EmptyState from "../../../components/ui/EmptyState";
 import { Task, TaskCreatePayload, TaskUpdatePayload } from "../../../types";
+import { AppIcon, icons } from "../../../components/ui/Icon";
 
 const STATUS_FILTERS = [
   { label: "All", value: "" },
@@ -186,7 +187,7 @@ const BacklogScreen: React.FC = () => {
       <View style={styles.headerArea}>
         <View style={styles.searchRow}>
           <View style={styles.searchBar}>
-            <Text style={styles.searchIcon}>🔍</Text>
+            <AppIcon name={icons.search} size={16} color={theme.colors.textMuted} />
             <TextInput
               style={styles.searchInput}
               value={searchQuery}
@@ -277,18 +278,18 @@ const BacklogScreen: React.FC = () => {
                 style={styles.scheduleBtnAlt}
                 onPress={() => handleSchedule(item)}
               >
-                <Text style={styles.scheduleBtnAltText}>📅</Text>
+                <AppIcon name={icons.calendar} size={14} color={theme.colors.textSecondary} />
               </TouchableOpacity>
             </View>
           </View>
         )}
         ListEmptyComponent={
           isError ? (
-            <EmptyState icon="⚠️" title="Couldn't load backlog" subtitle="Pull down to retry" />
+            <EmptyState icon="warning" title="Couldn't load backlog" subtitle="Pull down to retry" />
           ) : searchQuery || statusFilter || showHighPriorityOnly ? (
-            <EmptyState icon="🔍" title="No matching tasks" subtitle="Try a different filter or search" />
+            <EmptyState icon="search" title="No matching tasks" subtitle="Try a different filter or search" />
           ) : (
-            <EmptyState icon="🎉" title="Backlog is clear!" subtitle="All tasks are scheduled. Nice work." />
+            <EmptyState icon="sparkles" title="Backlog is clear!" subtitle="All tasks are scheduled. Nice work." />
           )
         }
         contentContainerStyle={styles.listContent}
@@ -344,7 +345,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: theme.colors.border,
   },
-  searchIcon: { fontSize: 14, marginRight: theme.spacing.xs },
   searchInput: {
     flex: 1,
     fontSize: theme.fontSize.sm,
@@ -444,8 +444,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: theme.colors.border,
     alignItems: "center",
+    justifyContent: "center",
   },
-  scheduleBtnAltText: { fontSize: 14 },
   listContent: { padding: theme.spacing.lg, paddingBottom: 100 },
 });
 

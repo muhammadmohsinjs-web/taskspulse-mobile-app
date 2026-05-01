@@ -40,7 +40,7 @@ const AnalyticsScreen: React.FC = () => {
   if (isError || !summary) {
     return (
       <View style={styles.centered}>
-        <EmptyState icon="⚠️" title="Couldn't load analytics" subtitle="Pull down to retry" />
+        <EmptyState icon="warning" title="Couldn't load analytics" subtitle="Pull down to retry" />
       </View>
     );
   }
@@ -86,7 +86,7 @@ const AnalyticsScreen: React.FC = () => {
           {/* Top streaks */}
           {topStreaks.length > 0 && (
             <View style={styles.streaksWrap}>
-              <Text style={styles.subSectionTitle}>Top Streaks 🔥</Text>
+              <Text style={styles.subSectionTitle}>Top Streaks</Text>
               {topStreaks.slice(0, 3).map((s) => (
                 <View key={s.habitId} style={styles.streakRow}>
                   <View style={[styles.streakDot, { backgroundColor: s.color }]} />

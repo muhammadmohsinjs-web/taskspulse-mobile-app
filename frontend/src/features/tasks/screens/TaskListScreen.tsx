@@ -11,6 +11,7 @@ import { theme } from "../../../theme/theme";
 import { useRefreshControl } from "../../../hooks/useRefreshControl";
 import { getErrorMessage } from "../../../utils/error";
 import { useTasks, useCreateTask, useUpdateTask, useDeleteTask } from "../hooks/useTasks";
+import { useLinkTaskToGoal } from "../../goals/hooks/useGoals";
 import TaskRow from "../components/TaskRow";
 import TaskFormModal from "../components/TaskFormModal";
 import FAB from "../../../components/ui/FAB";
@@ -33,16 +34,22 @@ const TaskListScreen: React.FC = () => {
   const createTask = useCreateTask();
   const updateTask = useUpdateTask();
   const deleteTask = useDeleteTask();
+  const linkTaskToGoal = useLinkTaskToGoal();
 
   const [modalVisible, setModalVisible] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [saving, setSaving] = useState(false);
+  const [linkingGoalId, setLinkingGoalId] = useState<string | null>(null);
 
   const { refreshControl } = useRefreshControl({ refetch });
+
+  const [createdTaskId, setCreatedTaskId] = useState<string | null>(null);
 
   const closeModal = useCallback(() => {
     setModalVisible(false);
     setEditingTask(null);
+    setCreatedTaskId(null);
+    setLinkingGoalId(null);
   }, []);
 
   const handleSave = useCallback(
@@ -52,7 +59,8 @@ const TaskListScreen: React.FC = () => {
         if (editingTask) {
           await updateTask.mutateAsync({ id: editingTask.id, payload: payload as TaskUpdatePayload });
         } else {
-          await createTask.mutateAsync(payload);
+          const newTask = await createTask.mutateAsync(payload);
+          setCreatedTaskId(newTask.id);
         }
         closeModal();
       } catch (e: unknown) {
@@ -62,6 +70,22 @@ const TaskListScreen: React.FC = () => {
       }
     },
     [editingTask, createTask, updateTask, closeModal]
+  );
+
+  const handleLinkToGoal = useCallback(
+    async (goalId: string) => {
+      if (!createdTaskId) return;
+      setLinkingGoalId(goalId);
+      try {
+        await linkTaskToGoal.mutateAsync({ goalId, taskId: createdTaskId });
+      } catch (e: unknown) {
+        Alert.alert("Error", getErrorMessage(e, "Failed to link task to goal"));
+      } finally {
+        setLinkingGoalId(null);
+        setCreatedTaskId(null);
+      }
+    },
+    [createdTaskId, linkTaskToGoal]
   );
 
   const handleToggle = useCallback(
@@ -136,9 +160,9 @@ const TaskListScreen: React.FC = () => {
         )}
         ListEmptyComponent={
           isError ? (
-            <EmptyState icon="⚠️" title="Couldn't load tasks" subtitle="Pull down to retry" />
+            <EmptyState icon="warning" title="Couldn't load tasks" subtitle="Pull down to retry" />
           ) : (
-            <EmptyState icon="📝" title="No tasks yet" subtitle="Tap + to create your first task" />
+            <EmptyState icon="edit" title="No tasks yet" subtitle="Tap + to create your first task" />
           )
         }
         contentContainerStyle={styles.listContent}
@@ -153,7 +177,9 @@ const TaskListScreen: React.FC = () => {
         onClose={closeModal}
         onSave={handleSave}
         editingTask={editingTask}
-        saving={saving}
+        saving={saving || !!linkingGoalId}
+        showGoalPicker
+        onLinkToGoal={handleLinkToGoal}
       />
     </View>
   );

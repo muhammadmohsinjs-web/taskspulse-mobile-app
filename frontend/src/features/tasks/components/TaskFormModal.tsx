@@ -7,6 +7,7 @@ import Button from "../../../components/ui/Button";
 import { Task, TaskCreatePayload, Goal, Category } from "../../../types";
 import { useGoals } from "../../goals/hooks/useGoals";
 import { useCategories } from "../../categories/hooks/useCategories";
+import { AppIcon, icons } from "../../../components/ui/Icon";
 
 interface TaskFormModalProps {
   visible: boolean;
@@ -213,7 +214,7 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({
         accessibilityLabel="Select due date"
         accessibilityRole="button"
       >
-        <Text style={styles.calendarIcon}>📅</Text>
+        <AppIcon name={icons.calendar} size={18} color={theme.colors.textMuted} />
         <Text style={[dueDate ? styles.dateText : styles.datePlaceholder, { flex: 1 }]}>
           {dueDate ? formatDisplayDate(dueDate) : "Select a date"}
         </Text>
@@ -405,9 +406,6 @@ const styles = StyleSheet.create({
     fontSize: theme.fontSize.lg,
     color: theme.colors.textMuted,
     padding: 2,
-  },
-  calendarIcon: {
-    fontSize: theme.fontSize.lg,
   },
   multiline: {
     minHeight: 70,

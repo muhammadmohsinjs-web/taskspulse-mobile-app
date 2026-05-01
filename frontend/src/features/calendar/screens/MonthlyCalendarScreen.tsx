@@ -15,6 +15,7 @@ import CalendarGrid from "../components/CalendarGrid";
 import Card from "../../../components/ui/Card";
 import LoadingSpinner from "../../../components/ui/LoadingSpinner";
 import { CalendarStackParamList } from "../../../types/navigation";
+import { AppIcon, icons } from "../../../components/ui/Icon";
 
 type MonthlyCalendarNavProp = NativeStackNavigationProp<CalendarStackParamList, "MonthlyCalendar">;
 
@@ -157,7 +158,7 @@ const MonthlyCalendarScreen: React.FC = () => {
         <Card style={styles.summaryCard}>
           {isError ? (
             <View style={styles.summaryError}>
-              <Text style={styles.summaryIcon}>⚠️</Text>
+              <AppIcon name={icons.warning} size={28} color={theme.colors.warning} />
               <Text style={styles.summaryText}>Couldn't load task data</Text>
               <TouchableOpacity onPress={() => refetch()}>
                 <Text style={styles.retryLink}>Retry</Text>
@@ -165,7 +166,7 @@ const MonthlyCalendarScreen: React.FC = () => {
             </View>
           ) : monthTasks.length === 0 ? (
             <View style={styles.summaryEmpty}>
-              <Text style={styles.summaryIcon}>📅</Text>
+              <AppIcon name={icons.calendar} size={28} color={theme.colors.textMuted} />
               <Text style={styles.summaryText}>No tasks scheduled this month</Text>
               <Text style={styles.summarySubText}>
                 Tap a date to add tasks
@@ -282,10 +283,6 @@ const styles = StyleSheet.create({
   summaryEmpty: {
     alignItems: "center",
     paddingVertical: theme.spacing.md,
-  },
-  summaryIcon: {
-    fontSize: 28,
-    marginBottom: theme.spacing.sm,
   },
   summaryText: {
     fontSize: theme.fontSize.sm,

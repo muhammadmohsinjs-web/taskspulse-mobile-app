@@ -22,6 +22,7 @@ import ProgressBar from "../../../components/ui/ProgressBar";
 import LoadingSpinner from "../../../components/ui/LoadingSpinner";
 import EmptyState from "../../../components/ui/EmptyState";
 import { CockpitHabit, CockpitTask } from "../../../types";
+import { AppIcon, icons } from "../../../components/ui/Icon";
 
 const DailyCockpitScreen: React.FC = () => {
   const navigation = useNavigation<NativeStackNavigationProp<TodayStackParamList>>();
@@ -76,7 +77,7 @@ const DailyCockpitScreen: React.FC = () => {
   if (isError) {
     return (
       <View style={styles.centered}>
-        <EmptyState icon="⚠️" title="Couldn't load cockpit" subtitle="Pull down to retry" />
+        <EmptyState icon="warning" title="Couldn't load cockpit" subtitle="Pull down to retry" />
       </View>
     );
   }
@@ -133,7 +134,9 @@ const DailyCockpitScreen: React.FC = () => {
         {/* Streak Nudge */}
         {atRiskHabits.length > 0 && (
           <View style={styles.nudge}>
-            <Text style={styles.nudgeIcon}>⚡</Text>
+            <View style={styles.nudgeIconWrap}>
+              <AppIcon name={icons.zap} size={18} color="#92400E" />
+            </View>
             <Text style={styles.nudgeText}>
               {atRiskHabits.length} habit{atRiskHabits.length > 1 ? "s" : ""} at risk! Complete before the day ends.
             </Text>
@@ -151,7 +154,7 @@ const DailyCockpitScreen: React.FC = () => {
 
           {habits.length === 0 ? (
             <EmptyState
-              icon="🌱"
+              icon="sprout"
               title="No habits yet"
               subtitle="Create your first habit to start building streaks"
             />
@@ -182,7 +185,7 @@ const DailyCockpitScreen: React.FC = () => {
 
           {tasks.length === 0 ? (
             <EmptyState
-              icon="📝"
+              icon="edit"
               title="No tasks for today"
               subtitle="Add a task or check your backlog"
             />
@@ -272,7 +275,9 @@ const styles = StyleSheet.create({
     padding: theme.spacing.md,
     marginBottom: theme.spacing.md,
   },
-  nudgeIcon: { fontSize: 18, marginRight: theme.spacing.sm },
+  nudgeIconWrap: {
+    marginRight: theme.spacing.sm,
+  },
   nudgeText: { flex: 1, fontSize: theme.fontSize.sm, color: "#92400E", fontWeight: "500" },
   section: {
     marginTop: theme.spacing.md,

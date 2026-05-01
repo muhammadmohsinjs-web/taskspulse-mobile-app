@@ -110,9 +110,9 @@ const GoalsListScreen: React.FC = () => {
         )}
         ListEmptyComponent={
           isError ? (
-            <EmptyState icon="⚠️" title="Couldn't load goals" subtitle="Pull down to retry" />
+            <EmptyState icon="warning" title="Couldn't load goals" subtitle="Pull down to retry" />
           ) : (
-            <EmptyState icon="🎯" title="No goals yet" subtitle="Tap + to create your first goal" />
+            <EmptyState icon="target" title="No goals yet" subtitle="Tap + to create your first goal" />
           )
         }
         contentContainerStyle={styles.listContent}

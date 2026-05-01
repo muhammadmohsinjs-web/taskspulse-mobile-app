@@ -1,9 +1,9 @@
 import React from "react";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { Text } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { theme } from "../theme/theme";
+import { AppIcon, icons } from "../components/ui/Icon";
 
 import DailyCockpitScreen from "../features/cockpit/screens/DailyCockpitScreen";
 import HabitsListScreen from "../features/habits/screens/HabitsListScreen";
@@ -110,16 +110,20 @@ const MoreStackNavigator = () => (
 );
 
 const TabIcon = ({ label, focused }: { label: string; focused: boolean }) => {
-  const icons: Record<string, string> = {
-    Today: "☀️",
-    Calendar: "📅",
-    Backlog: "📥",
-    More: "⋮",
+  const iconMap: Record<string, keyof typeof icons> = {
+    Today: "sun",
+    Calendar: "calendar",
+    Backlog: "inbox",
+    More: "more",
   };
+  const iconName = iconMap[label];
+  if (!iconName) return null;
   return (
-    <Text style={{ fontSize: focused ? 22 : 20, opacity: focused ? 1 : 0.5 }}>
-      {icons[label] || "•"}
-    </Text>
+    <AppIcon
+      name={icons[iconName]}
+      size={focused ? 24 : 22}
+      color={focused ? theme.colors.primary : theme.colors.textMuted}
+    />
   );
 };
 

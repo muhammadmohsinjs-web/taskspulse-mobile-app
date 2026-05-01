@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "lucide-react-native": "^1.14.0",
+    "react-native-svg": "^15.15.4"
+  }
+}

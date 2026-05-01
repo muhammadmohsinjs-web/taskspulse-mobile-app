@@ -109,9 +109,9 @@ const HabitsListScreen: React.FC = () => {
         )}
         ListEmptyComponent={
           isError ? (
-            <EmptyState icon="⚠️" title="Couldn't load habits" subtitle="Pull down to retry" />
+            <EmptyState icon="warning" title="Couldn't load habits" subtitle="Pull down to retry" />
           ) : (
-            <EmptyState icon="🌱" title="No habits yet" subtitle="Tap + to create your first habit" />
+            <EmptyState icon="sprout" title="No habits yet" subtitle="Tap + to create your first habit" />
           )
         }
         contentContainerStyle={styles.listContent}
