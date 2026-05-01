@@ -2,7 +2,7 @@ import logging
 from datetime import date, datetime, timezone, timedelta
 from sqlalchemy.orm import Session
 from modules.habits.models import Habit, HabitLog, HabitStreak
-from modules.habits.schemas import HabitCreate, HabitUpdate
+from modules.habits.schemas import HabitCreate, HabitUpdate, HabitWithStreak
 
 logger = logging.getLogger(__name__)
 
@@ -100,13 +100,16 @@ def get_habit_completions_for_date(db: Session, habit_id: str, target_date: str)
 
 def batch_get_streaks(db: Session, habit_ids: list[str]) -> dict[str, HabitStreak]:
     streaks = db.query(HabitStreak).filter(HabitStreak.habit_id.in_(habit_ids)).all()
+    existing_ids = {s.habit_id for s in streaks}
     result = {s.habit_id: s for s in streaks}
+    has_new = False
     for hid in habit_ids:
-        if hid not in result:
+        if hid not in existing_ids:
             streak = HabitStreak(habit_id=hid)
             db.add(streak)
             result[hid] = streak
-    if any(hid not in {s.habit_id for s in streaks} for hid in habit_ids):
+            has_new = True
+    if has_new:
         db.commit()
     return result
 
@@ -194,3 +197,23 @@ def _recalculate_streak(db: Session, habit_id: str):
     streak.longest_streak = max(streak.longest_streak, longest)
     streak.last_completed_date = dates[0] if dates else None
     db.commit()
+
+
+def build_habit_with_streak(db: Session, habit: Habit) -> HabitWithStreak:
+    streak = get_streak(db, habit.id)
+    completed_today = is_habit_completed_today(db, habit.id)
+    return HabitWithStreak(
+        id=habit.id,
+        title=habit.title,
+        description=habit.description,
+        category_id=habit.category_id,
+        recurrence_rule=habit.recurrence_rule,
+        color=habit.color,
+        deleted_at=habit.deleted_at,
+        created_at=habit.created_at,
+        updated_at=habit.updated_at,
+        current_streak=streak.current_streak,
+        longest_streak=streak.longest_streak,
+        last_completed_date=streak.last_completed_date,
+        completed_today=completed_today,
+    )

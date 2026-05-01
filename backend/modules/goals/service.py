@@ -144,5 +144,5 @@ def unlink_task_from_goal(db: Session, goal_id: str, task_id: str) -> bool:
     return True
 
 
-def get_goal_links(db: Session, goal_id: str) -> list[GoalTaskLink]:
+def get_goal_task_links(db: Session, goal_id: str) -> list[GoalTaskLink]:
     return db.query(GoalTaskLink).filter(GoalTaskLink.goal_id == goal_id).all()

@@ -61,17 +61,13 @@ const HabitsListScreen: React.FC = () => {
         categoryId: selectedCategoryId,
         color: selectedColor,
       });
-      setTitle("");
-      setDescription("");
-      setSelectedCategoryId(null);
-      setSelectedColor(DEFAULT_COLOR);
-      setModalVisible(false);
+      closeModal();
     } catch (e: unknown) {
       Alert.alert("Error", getErrorMessage(e, "Failed to create habit"));
     } finally {
       setSaving(false);
     }
-  }, [title, description, selectedCategoryId, selectedColor, createHabit]);
+  }, [title, description, selectedCategoryId, selectedColor, createHabit, closeModal]);
 
   const handleDelete = useCallback(
     (id: string) => {

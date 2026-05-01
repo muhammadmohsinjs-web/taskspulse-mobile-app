@@ -10,6 +10,7 @@ import CategoriesScreen from "../features/categories/screens/CategoriesScreen";
 import TaskListScreen from "../features/tasks/screens/TaskListScreen";
 import GoalsListScreen from "../features/goals/screens/GoalsListScreen";
 import GoalDetailScreen from "../features/goals/screens/GoalDetailScreen";
+import BacklogScreen from "../features/backlog/screens/BacklogScreen";
 
 const Tab = createBottomTabNavigator();
 const MoreStack = createNativeStackNavigator();
@@ -34,6 +35,16 @@ const TodayStackNavigator = () => (
       options={{
         headerShown: true,
         headerTitle: "Habits",
+        headerTintColor: theme.colors.primary,
+        headerStyle: { backgroundColor: theme.colors.background },
+      }}
+    />
+    <TodayStack.Screen
+      name="Backlog"
+      component={BacklogScreen}
+      options={{
+        headerShown: true,
+        headerTitle: "Backlog",
         headerTintColor: theme.colors.primary,
         headerStyle: { backgroundColor: theme.colors.background },
       }}
@@ -79,12 +90,22 @@ const MoreStackNavigator = () => (
         headerStyle: { backgroundColor: theme.colors.background },
       }}
     />
+    <MoreStack.Screen
+      name="Backlog"
+      component={BacklogScreen}
+      options={{
+        headerTitle: "Backlog",
+        headerTintColor: theme.colors.primary,
+        headerStyle: { backgroundColor: theme.colors.background },
+      }}
+    />
   </MoreStack.Navigator>
 );
 
 const TabIcon = ({ label, focused }: { label: string; focused: boolean }) => {
   const icons: Record<string, string> = {
     Today: "☀️",
+    Backlog: "📥",
     More: "⋯",
   };
   return (
@@ -114,6 +135,7 @@ const RootNavigator: React.FC = () => (
     })}
   >
     <Tab.Screen name="Today" component={TodayStackNavigator} />
+    <Tab.Screen name="Backlog" component={BacklogScreen} />
     <Tab.Screen name="More" component={MoreStackNavigator} />
   </Tab.Navigator>
 );

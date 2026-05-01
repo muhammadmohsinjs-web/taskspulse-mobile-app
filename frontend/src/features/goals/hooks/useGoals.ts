@@ -17,6 +17,14 @@ export function useGoal(id: string | null) {
   });
 }
 
+export function useGoalTasks(goalId: string | null) {
+  return useQuery({
+    queryKey: ["goals", goalId, "tasks"],
+    queryFn: () => goalsApi.getTasks(goalId!),
+    enabled: !!goalId,
+  });
+}
+
 export function useCreateGoal() {
   const qc = useQueryClient();
   return useMutation({

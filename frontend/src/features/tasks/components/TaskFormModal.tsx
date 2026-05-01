@@ -37,6 +37,8 @@ const RECURRENCE_OPTIONS = [
   { label: "One-off", value: null },
   { label: "Daily", value: '{"type":"daily"}' },
   { label: "Weekly", value: '{"type":"weekly"}' },
+  { label: "Monthly", value: '{"type":"monthly"}' },
+  { label: "Yearly", value: '{"type":"yearly"}' },
 ];
 
 const CATEGORY_COLORS = ["#4A90D9", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6", "#EC4899", "#06B6D4"];
@@ -113,7 +115,7 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({
       setRecurrenceRule(editingTask?.recurrenceRule || null);
       setSelectedGoalId(preselectedGoalId || null);
     }
-  }, [visible, editingTask, preselectedGoalId]);
+  }, [visible]);
 
   const handleSave = async () => {
     if (!title.trim()) {

@@ -14,10 +14,10 @@ def list_tasks(
     date: str | None = Query(None, description="Filter by due_date (YYYY-MM-DD)"),
     status: str | None = Query(None, description="Filter by status (todo|in_progress|done)"),
     category_id: str | None = Query(None, description="Filter by category ID"),
-    goal_id: str | None = Query(None, description="Filter by goal ID"),
+    is_backlog: bool = Query(False, description="Filter tasks with no due_date (backlog)"),
     db: Session = Depends(get_db),
 ):
-    return service.get_tasks(db, skip=skip, limit=limit, date=date, status=status, category_id=category_id, goal_id=goal_id)
+    return service.get_tasks(db, skip=skip, limit=limit, date=date, status=status, category_id=category_id, is_backlog=is_backlog)
 
 
 @router.post("", response_model=TaskOut, status_code=status.HTTP_201_CREATED, summary="Create task")

@@ -2,7 +2,6 @@ from datetime import datetime, timezone
 from sqlalchemy.orm import Session
 from modules.tasks.models import Task
 from modules.tasks.schemas import TaskCreate, TaskUpdate
-from modules.goals.models import GoalTaskLink
 
 
 def get_tasks(
@@ -12,19 +11,20 @@ def get_tasks(
     date: str | None = None,
     status: str | None = None,
     category_id: str | None = None,
-    goal_id: str | None = None,
+    task_ids: list[str] | None = None,
+    is_backlog: bool = False,
 ):
     query = db.query(Task).filter(Task.deleted_at.is_(None))
-    if date:
+    if task_ids:
+        query = query.filter(Task.id.in_(task_ids))
+    elif is_backlog:
+        query = query.filter(Task.due_date.is_(None))
+    elif date:
         query = query.filter(Task.due_date == date)
     if status:
         query = query.filter(Task.status == status)
     if category_id:
         query = query.filter(Task.category_id == category_id)
-    if goal_id:
-        query = query.join(GoalTaskLink, Task.id == GoalTaskLink.task_id).filter(
-            GoalTaskLink.goal_id == goal_id
-        )
     return query.order_by(Task.created_at.desc()).offset(skip).limit(limit).all()
 
 

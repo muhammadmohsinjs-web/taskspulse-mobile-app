@@ -13,8 +13,8 @@ import { theme } from "../../../theme/theme";
 import { useRefreshControl } from "../../../hooks/useRefreshControl";
 import { getErrorMessage } from "../../../utils/error";
 import { MoreStackParamList } from "../../../types";
-import { useGoal, useLinkTaskToGoal, useUnlinkTaskFromGoal, useDeleteGoal } from "../hooks/useGoals";
-import { useTasks, useCreateTask, useUpdateTask } from "../../tasks/hooks/useTasks";
+import { useGoal, useGoalTasks, useLinkTaskToGoal, useUnlinkTaskFromGoal, useDeleteGoal } from "../hooks/useGoals";
+import { useCreateTask, useUpdateTask, useDeleteTask } from "../../tasks/hooks/useTasks";
 import ProgressBar from "../../../components/ui/ProgressBar";
 import Card from "../../../components/ui/Card";
 import LoadingSpinner from "../../../components/ui/LoadingSpinner";
@@ -33,9 +33,10 @@ const GoalDetailScreen: React.FC = () => {
   const { goalId } = route.params;
 
   const { data: goal, isLoading, isError, refetch: refetchGoal } = useGoal(goalId);
-  const { data: tasks, refetch: refetchTasks } = useTasks({ goalId });
+  const { data: tasks, refetch: refetchTasks } = useGoalTasks(goalId);
   const createTask = useCreateTask();
   const updateTask = useUpdateTask();
+  const deleteTask = useDeleteTask();
   const linkTask = useLinkTaskToGoal();
   const unlinkTask = useUnlinkTaskFromGoal();
   const deleteGoal = useDeleteGoal();
@@ -66,19 +67,24 @@ const GoalDetailScreen: React.FC = () => {
   const handleLinkNewTask = useCallback(
     async (payload: TaskCreatePayload) => {
       setSaving(true);
+      let newTaskId: string | null = null;
       try {
         const newTask = await createTask.mutateAsync(payload);
-        await linkTask.mutateAsync({ goalId, taskId: newTask.id });
+        newTaskId = newTask.id;
+        await linkTask.mutateAsync({ goalId, taskId: newTaskId });
         refetchTasks();
         refetchGoal();
         setAddModalVisible(false);
       } catch (e: unknown) {
+        if (newTaskId) {
+          deleteTask.mutate(newTaskId);
+        }
         Alert.alert("Error", getErrorMessage(e, "Failed to create task"));
       } finally {
         setSaving(false);
       }
     },
-    [goalId, createTask, linkTask, refetchTasks, refetchGoal]
+    [goalId, createTask, linkTask, deleteTask, refetchTasks, refetchGoal]
   );
 
   const handleUnlink = useCallback(

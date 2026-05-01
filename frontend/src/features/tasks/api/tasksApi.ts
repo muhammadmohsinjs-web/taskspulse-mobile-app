@@ -3,12 +3,12 @@ import { toSnakeCase } from "../../../services/mappers";
 import { TaskRaw, Task, mapTask, TaskCreatePayload, TaskUpdatePayload } from "../../../types/task";
 
 export const tasksApi = {
-  getAll: async (params?: { date?: string; status?: string; categoryId?: string; goalId?: string; skip?: number; limit?: number }): Promise<Task[]> => {
+  getAll: async (params?: { date?: string; status?: string; categoryId?: string; isBacklog?: boolean; skip?: number; limit?: number }): Promise<Task[]> => {
     const query = new URLSearchParams();
     if (params?.date) query.set("date", params.date);
     if (params?.status) query.set("status", params.status);
     if (params?.categoryId) query.set("category_id", params.categoryId);
-    if (params?.goalId) query.set("goal_id", params.goalId);
+    if (params?.isBacklog) query.set("is_backlog", "true");
     if (params?.skip !== undefined) query.set("skip", String(params.skip));
     if (params?.limit !== undefined) query.set("limit", String(params.limit));
     const qs = query.toString();

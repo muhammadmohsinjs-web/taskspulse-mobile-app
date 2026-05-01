@@ -1,6 +1,7 @@
 import { apiClient } from "../../../services/apiClient";
 import { toSnakeCase } from "../../../services/mappers";
 import { GoalRaw, Goal, mapGoal, GoalCreatePayload, GoalUpdatePayload, GoalTaskLinkRaw, GoalTaskLink, mapGoalTaskLink } from "../../../types/goal";
+import { TaskRaw, Task, mapTask } from "../../../types/task";
 
 export const goalsApi = {
   getAll: async (): Promise<Goal[]> => {
@@ -37,5 +38,10 @@ export const goalsApi = {
 
   unlinkTask: async (goalId: string, taskId: string): Promise<void> => {
     await apiClient.delete(`/goals/${goalId}/tasks/${taskId}`);
+  },
+
+  getTasks: async (goalId: string): Promise<Task[]> => {
+    const data = await apiClient.get<TaskRaw[]>(`/goals/${goalId}/tasks`);
+    return data.map(mapTask);
   },
 };

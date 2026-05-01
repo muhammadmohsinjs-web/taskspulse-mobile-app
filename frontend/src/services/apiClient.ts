@@ -55,7 +55,7 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
     return res.json();
   } catch (e) {
     if (e instanceof ApiError) throw e;
-    if ((e as Error).name === "AbortError") {
+    if (e instanceof DOMException && e.name === "AbortError") {
       throw new Error("Request timed out. Is the backend running?");
     }
     throw e;

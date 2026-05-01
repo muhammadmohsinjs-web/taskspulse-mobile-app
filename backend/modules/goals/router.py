@@ -4,6 +4,7 @@ from database import get_db
 from modules.tasks.schemas import TaskOut
 from modules.goals.schemas import GoalCreate, GoalUpdate, GoalOut, GoalTaskLinkCreate, GoalTaskLinkOut
 from modules.goals import service
+from modules.tasks import service as task_service
 
 router = APIRouter()
 
@@ -53,8 +54,11 @@ def list_goal_tasks(goal_id: str, db: Session = Depends(get_db)):
     goal = service.get_goal(db, goal_id)
     if not goal:
         raise HTTPException(status_code=404, detail="Goal not found")
-    from modules.tasks import service as task_service
-    return task_service.get_tasks(db, goal_id=goal_id)
+    links = service.get_goal_task_links(db, goal_id)
+    task_ids = [link.task_id for link in links]
+    if not task_ids:
+        return []
+    return task_service.get_tasks(db, task_ids=task_ids)
 
 
 @router.delete("/{goal_id}/tasks/{task_id}", status_code=status.HTTP_204_NO_CONTENT, summary="Unlink task from goal")

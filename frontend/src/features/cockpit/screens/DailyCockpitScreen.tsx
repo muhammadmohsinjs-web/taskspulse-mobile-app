@@ -170,16 +170,21 @@ const DailyCockpitScreen: React.FC = () => {
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Tasks</Text>
-            <TouchableOpacity onPress={() => navigation.navigate("TaskList")}>
-              <Text style={styles.sectionAction}>View All</Text>
-            </TouchableOpacity>
+            <View style={styles.sectionActions}>
+              <TouchableOpacity onPress={() => navigation.navigate("Backlog")}>
+                <Text style={styles.sectionAction}>Backlog</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => navigation.navigate("TaskList")}>
+                <Text style={styles.sectionAction}>View All</Text>
+              </TouchableOpacity>
+            </View>
           </View>
 
           {tasks.length === 0 ? (
             <EmptyState
               icon="📝"
               title="No tasks for today"
-              subtitle="Add a task to get started"
+              subtitle="Add a task or check your backlog"
             />
           ) : (
             tasks.map((task) => (
@@ -280,6 +285,7 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.sm,
   },
   sectionTitle: { fontSize: theme.fontSize.lg, fontWeight: "700", color: theme.colors.textPrimary },
+  sectionActions: { flexDirection: "row", gap: theme.spacing.md },
   sectionAction: { fontSize: theme.fontSize.sm, color: theme.colors.primary, fontWeight: "600" },
   taskRow: {
     flexDirection: "row",
