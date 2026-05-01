@@ -2,38 +2,46 @@ import React from "react";
 import { View } from "react-native";
 import {
   AlertTriangle,
-  ClipboardList,
-  PenLine,
-  Target,
-  Calendar,
-  Sparkles,
-  BarChart3,
-  Settings,
-  Search,
-  Tag,
-  ListChecks,
-  Sun,
-  Inbox,
-  MoreHorizontal,
-  ChevronRight,
-  Check,
-  X,
-  Zap,
-  Sprout,
-  PartyPopper,
-  FileText,
+  Archive,
   ArrowLeft,
   ArrowRight,
-  Mail,
-  Lock,
+  BarChart3,
+  Bell,
+  BookOpen,
+  Calendar,
+  ChartColumnIncreasing,
+  Check,
+  CheckCircle2,
+  ChevronRight,
+  ClipboardList,
+  Clock,
   Eye,
   EyeOff,
-  Menu,
-  Bell,
+  FileText,
   Flag,
-  Clock,
+  Flame,
+  Goal,
+  House,
+  Inbox,
+  ListChecks,
+  Lock,
+  Mail,
+  Menu,
+  MoreHorizontal,
+  PartyPopper,
+  PenLine,
+  Plus,
+  Rocket,
+  Search,
+  Settings,
+  Sparkles,
+  Sprout,
+  Sun,
+  Tag,
+  Target,
   User,
-  CheckCircle2,
+  X,
+  Zap,
   type LucideIcon,
 } from "lucide-react-native";
 import { theme } from "../../theme/theme";
@@ -71,7 +79,15 @@ export type IconName =
   | "flag"
   | "clock"
   | "user"
-  | "checkCircle";
+  | "checkCircle"
+  | "home"
+  | "archive"
+  | "goal"
+  | "plus"
+  | "rocket"
+  | "book"
+  | "chartUp"
+  | "flame";
 
 const ICON_MAP: Record<IconName, LucideIcon> = {
   warning: AlertTriangle,
@@ -107,6 +123,14 @@ const ICON_MAP: Record<IconName, LucideIcon> = {
   clock: Clock,
   user: User,
   checkCircle: CheckCircle2,
+  home: House,
+  archive: Archive,
+  goal: Goal,
+  plus: Plus,
+  rocket: Rocket,
+  book: BookOpen,
+  chartUp: ChartColumnIncreasing,
+  flame: Flame,
 };
 
 interface AppIconProps {
@@ -182,4 +206,12 @@ export const icons = {
   clock: "clock" as IconName,
   user: "user" as IconName,
   checkCircle: "checkCircle" as IconName,
+  home: "home" as IconName,
+  archive: "archive" as IconName,
+  goal: "goal" as IconName,
+  plus: "plus" as IconName,
+  rocket: "rocket" as IconName,
+  book: "book" as IconName,
+  chartUp: "chartUp" as IconName,
+  flame: "flame" as IconName,
 };

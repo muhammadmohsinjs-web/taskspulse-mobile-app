@@ -10,7 +10,7 @@ export type { Goal, GoalRaw, GoalCreatePayload, GoalUpdatePayload, GoalTaskLink,
 export { mapGoal, mapGoalTaskLink } from "./goal";
 export type { AnalyticsSummary, HeatmapData, StreakInfo, GoalProgress, TaskTrends, HabitBar, CategoryDistribution } from "./analytics";
 export { mapAnalyticsSummary, mapHeatmapData } from "./analytics";
-export type { TodayStackParamList, MoreStackParamList, CalendarStackParamList, RootTabParamList } from "./navigation";
+export type { TodayStackParamList, GoalsStackParamList, MoreStackParamList, CalendarStackParamList, RootTabParamList } from "./navigation";
 export type {
   PlanningTask, WeekDay, WeekView, FocusTask, FocusQueue,
   AutoBalanceRequest, AutoBalanceResponse, CarryForwardRequest, CarryForwardResponse,

@@ -15,7 +15,7 @@ import { useRefreshControl } from "../../../hooks/useRefreshControl";
 import { getErrorMessage } from "../../../utils/error";
 import { isValidDateString } from "../../../utils/date";
 import { useGoals, useCreateGoal, useDeleteGoal } from "../hooks/useGoals";
-import { MoreStackParamList } from "../../../types";
+import { GoalsStackParamList } from "../../../types";
 import GoalCard from "../components/GoalCard";
 import Modal from "../../../components/ui/Modal";
 import Button from "../../../components/ui/Button";
@@ -23,7 +23,7 @@ import FAB from "../../../components/ui/FAB";
 import LoadingSpinner from "../../../components/ui/LoadingSpinner";
 import EmptyState from "../../../components/ui/EmptyState";
 
-type GoalsListNavProp = NativeStackNavigationProp<MoreStackParamList, "GoalsList">;
+type GoalsListNavProp = NativeStackNavigationProp<GoalsStackParamList, "GoalsList">;
 
 const DEFAULT_COLOR = theme.colors.primary;
 

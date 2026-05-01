@@ -1,3 +1,5 @@
+import type { NavigatorScreenParams } from "@react-navigation/native";
+
 export type TodayStackParamList = {
   Cockpit: undefined;
   TaskList: undefined;
@@ -5,10 +7,13 @@ export type TodayStackParamList = {
   Backlog: undefined;
 };
 
-export type MoreStackParamList = {
-  Categories: undefined;
+export type GoalsStackParamList = {
   GoalsList: undefined;
   GoalDetail: { goalId: string };
+};
+
+export type MoreStackParamList = {
+  Categories: undefined;
   Analytics: undefined;
   WeeklyPlanning: undefined;
   Settings: undefined;
@@ -23,5 +28,6 @@ export type RootTabParamList = {
   Today: undefined;
   Calendar: undefined;
   Backlog: undefined;
+  Goals: NavigatorScreenParams<GoalsStackParamList> | undefined;
   More: undefined;
 };

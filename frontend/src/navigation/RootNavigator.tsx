@@ -39,6 +39,7 @@ const Tab = createBottomTabNavigator();
 const MoreStack = createNativeStackNavigator();
 const TodayStack = createNativeStackNavigator();
 const CalendarStack = createNativeStackNavigator();
+const GoalsStack = createNativeStackNavigator();
 const RootStack = createNativeStackNavigator();
 
 const ONBOARDING_KEY = "@taskspulse_has_seen_onboarding";
@@ -88,6 +89,21 @@ const CalendarStackNavigator = () => (
   </CalendarStack.Navigator>
 );
 
+const GoalsStackNavigator = () => (
+  <GoalsStack.Navigator>
+    <GoalsStack.Screen
+      name="GoalsList"
+      component={GoalsListScreen}
+      options={{ headerShown: false }}
+    />
+    <GoalsStack.Screen
+      name="GoalDetail"
+      component={GoalDetailScreen}
+      options={{ ...stackScreenOptions, headerTitle: "Goal" }}
+    />
+  </GoalsStack.Navigator>
+);
+
 const MoreStackNavigator = () => (
   <MoreStack.Navigator>
     <MoreStack.Screen
@@ -99,16 +115,6 @@ const MoreStackNavigator = () => (
       name="Categories"
       component={CategoriesScreen}
       options={{ ...stackScreenOptions, headerTitle: "Categories" }}
-    />
-    <MoreStack.Screen
-      name="GoalsList"
-      component={GoalsListScreen}
-      options={{ ...stackScreenOptions, headerTitle: "Goals" }}
-    />
-    <MoreStack.Screen
-      name="GoalDetail"
-      component={GoalDetailScreen}
-      options={{ ...stackScreenOptions, headerTitle: "Goal" }}
     />
     <MoreStack.Screen
       name="Analytics"
@@ -130,9 +136,10 @@ const MoreStackNavigator = () => (
 
 const TabIcon = ({ label, focused }: { label: string; focused: boolean }) => {
   const iconMap: Record<string, keyof typeof icons> = {
-    Today: "sun",
+    Today: "home",
     Calendar: "calendar",
-    Backlog: "inbox",
+    Backlog: "archive",
+    Goals: "goal",
     More: "more",
   };
   const iconName = iconMap[label];
@@ -209,8 +216,9 @@ const RootNavigator: React.FC = () => {
                   tabBarStyle: {
                     backgroundColor: theme.colors.surface,
                     borderTopColor: theme.colors.border,
-                    paddingBottom: 4 + insets.bottom,
-                    height: 56 + insets.bottom,
+                    paddingBottom: 6 + insets.bottom,
+                    paddingTop: 6,
+                    height: 64 + insets.bottom,
                   },
                   tabBarLabelStyle: {
                     fontSize: theme.fontSize.xs,
@@ -221,6 +229,7 @@ const RootNavigator: React.FC = () => {
                 <Tab.Screen name="Today" component={TodayStackNavigator} />
                 <Tab.Screen name="Calendar" component={CalendarStackNavigator} />
                 <Tab.Screen name="Backlog" component={BacklogScreen} />
+                <Tab.Screen name="Goals" component={GoalsStackNavigator} />
                 <Tab.Screen name="More" component={MoreStackNavigator} />
               </Tab.Navigator>
             )}

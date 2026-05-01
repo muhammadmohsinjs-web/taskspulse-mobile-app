@@ -6,8 +6,9 @@ import {
   StyleSheet,
   TouchableOpacity,
 } from "react-native";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation, CompositeNavigationProp } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 import { theme } from "../../../theme/theme";
 import { useRefreshControl } from "../../../hooks/useRefreshControl";
 import { useAnalyticsSummary, useHeatmap } from "../../analytics/hooks/useAnalytics";
@@ -17,9 +18,12 @@ import Card from "../../../components/ui/Card";
 import LoadingSpinner from "../../../components/ui/LoadingSpinner";
 import EmptyState from "../../../components/ui/EmptyState";
 import CalendarHeatmap from "../../calendar/components/CalendarHeatmap";
-import { MoreStackParamList } from "../../../types";
+import { MoreStackParamList, RootTabParamList } from "../../../types";
 
-type AnalyticsNavProp = NativeStackNavigationProp<MoreStackParamList, "Analytics">;
+type AnalyticsNavProp = CompositeNavigationProp<
+  NativeStackNavigationProp<MoreStackParamList, "Analytics">,
+  BottomTabNavigationProp<RootTabParamList>
+>;
 
 const HABIT_BAR_COLOR = (rate: number) => {
   if (rate >= 80) return theme.colors.success;
@@ -179,7 +183,7 @@ const AnalyticsScreen: React.FC = () => {
                   key={g.goalId}
                   style={styles.goalRow}
                   activeOpacity={0.6}
-                  onPress={() => navigation.navigate("GoalDetail", { goalId: g.goalId })}
+                  onPress={() => (navigation as any).navigate("Goals", { screen: "GoalDetail", params: { goalId: g.goalId } })}
                 >
                   <View style={styles.goalHeader}>
                     <Text style={styles.goalName} numberOfLines={1}>

@@ -8,7 +8,6 @@ import { AppIcon, icons } from "../../../components/ui/Icon";
 
 type MoreStackParamList = {
   Categories: undefined;
-  GoalsList: undefined;
   Analytics: undefined;
   WeeklyPlanning: undefined;
   Settings: undefined;
@@ -31,13 +30,6 @@ const MENU_ITEMS: MenuItem[] = [
     subtitle: "Organize habits and tasks",
     iconName: "tag",
     screen: "Categories",
-  },
-  {
-    id: "goals",
-    title: "Goals",
-    subtitle: "Track long-term objectives",
-    iconName: "target",
-    screen: "GoalsList",
   },
   {
     id: "analytics",

@@ -13,7 +13,7 @@ import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { theme } from "../../../theme/theme";
 import { useRefreshControl } from "../../../hooks/useRefreshControl";
 import { getErrorMessage } from "../../../utils/error";
-import { MoreStackParamList } from "../../../types";
+import { GoalsStackParamList } from "../../../types";
 import { useGoal, useGoalTasks, useLinkTaskToGoal, useUnlinkTaskFromGoal, useDeleteGoal } from "../hooks/useGoals";
 import { useTasks, useCreateTask, useUpdateTask, useDeleteTask } from "../../tasks/hooks/useTasks";
 import ProgressBar from "../../../components/ui/ProgressBar";
@@ -26,8 +26,8 @@ import TaskFormModal from "../../tasks/components/TaskFormModal";
 import { Task, TaskCreatePayload } from "../../../types";
 import { AppIcon, icons } from "../../../components/ui/Icon";
 
-type GoalDetailRouteProp = RouteProp<MoreStackParamList, "GoalDetail">;
-type GoalDetailNavProp = NativeStackNavigationProp<MoreStackParamList, "GoalDetail">;
+type GoalDetailRouteProp = RouteProp<GoalsStackParamList, "GoalDetail">;
+type GoalDetailNavProp = NativeStackNavigationProp<GoalsStackParamList, "GoalDetail">;
 
 const GoalDetailScreen: React.FC = () => {
   const route = useRoute<GoalDetailRouteProp>();
