@@ -2,32 +2,48 @@ from datetime import date, datetime, timezone, timedelta
 from sqlalchemy.orm import Session
 from modules.habits.models import Habit, HabitLog, HabitStreak
 from modules.habits.schemas import HabitCreate, HabitUpdate, HabitWithStreak
+from modules.categories.models import Category
 
 
-def get_habits(db: Session):
-    return db.query(Habit).filter(Habit.deleted_at.is_(None)).order_by(Habit.created_at.desc()).all()
+def get_habits(db: Session, user_id: str | None = None):
+    filters = [Habit.deleted_at.is_(None)]
+    if user_id:
+        filters.append(Habit.user_id == user_id)
+    return db.query(Habit).filter(*filters).order_by(Habit.created_at.desc()).all()
 
 
-def get_habit(db: Session, habit_id: str):
-    return db.query(Habit).filter(Habit.id == habit_id, Habit.deleted_at.is_(None)).first()
+def get_habit(db: Session, habit_id: str, user_id: str | None = None):
+    filters = [Habit.id == habit_id, Habit.deleted_at.is_(None)]
+    if user_id:
+        filters.append(Habit.user_id == user_id)
+    return db.query(Habit).filter(*filters).first()
 
 
-def create_habit(db: Session, habit: HabitCreate):
-    db_habit = Habit(**habit.model_dump())
+def create_habit(db: Session, habit: HabitCreate, user_id: str):
+    data = habit.model_dump()
+    if data.get("category_id"):
+        cat = db.query(Category).filter(Category.id == data["category_id"], Category.user_id == user_id).first()
+        if not cat:
+            raise ValueError("Category not found")
+    db_habit = Habit(**data, user_id=user_id)
     db.add(db_habit)
     db.flush()
-    db_streak = HabitStreak(habit_id=db_habit.id)
+    db_streak = HabitStreak(habit_id=db_habit.id, user_id=user_id)
     db.add(db_streak)
     db.commit()
     db.refresh(db_habit)
     return db_habit
 
 
-def update_habit(db: Session, habit_id: str, habit: HabitUpdate):
-    db_habit = db.query(Habit).filter(Habit.id == habit_id, Habit.deleted_at.is_(None)).first()
+def update_habit(db: Session, habit_id: str, habit: HabitUpdate, user_id: str):
+    db_habit = db.query(Habit).filter(Habit.id == habit_id, Habit.user_id == user_id, Habit.deleted_at.is_(None)).first()
     if not db_habit:
         return None
     update_data = habit.model_dump(exclude_unset=True)
+    if "category_id" in update_data and update_data["category_id"]:
+        cat = db.query(Category).filter(Category.id == update_data["category_id"], Category.user_id == user_id).first()
+        if not cat:
+            raise ValueError("Category not found")
     for key, value in update_data.items():
         setattr(db_habit, key, value)
     db.commit()
@@ -35,8 +51,8 @@ def update_habit(db: Session, habit_id: str, habit: HabitUpdate):
     return db_habit
 
 
-def delete_habit(db: Session, habit_id: str):
-    db_habit = db.query(Habit).filter(Habit.id == habit_id, Habit.deleted_at.is_(None)).first()
+def delete_habit(db: Session, habit_id: str, user_id: str):
+    db_habit = db.query(Habit).filter(Habit.id == habit_id, Habit.user_id == user_id, Habit.deleted_at.is_(None)).first()
     if not db_habit:
         return None
     db_habit.deleted_at = datetime.now(timezone.utc).isoformat()
@@ -44,8 +60,11 @@ def delete_habit(db: Session, habit_id: str):
     return db_habit
 
 
-def complete_habit(db: Session, habit_id: str, completion_date: str | None = None):
-    habit = db.query(Habit).filter(Habit.id == habit_id, Habit.deleted_at.is_(None)).first()
+def complete_habit(db: Session, habit_id: str, completion_date: str | None = None, user_id: str | None = None):
+    filters = [Habit.id == habit_id, Habit.deleted_at.is_(None)]
+    if user_id:
+        filters.append(Habit.user_id == user_id)
+    habit = db.query(Habit).filter(*filters).first()
     if not habit:
         return None
 
@@ -62,7 +81,8 @@ def complete_habit(db: Session, habit_id: str, completion_date: str | None = Non
     if existing:
         return existing
 
-    log = HabitLog(habit_id=habit_id, completed_date=completed)
+    log_user_id = user_id or habit.user_id
+    log = HabitLog(habit_id=habit_id, user_id=log_user_id, completed_date=completed)
     db.add(log)
     try:
         db.commit()
@@ -75,8 +95,11 @@ def complete_habit(db: Session, habit_id: str, completion_date: str | None = Non
     return log
 
 
-def undo_completion(db: Session, habit_id: str, completion_date: str | None = None):
-    habit = db.query(Habit).filter(Habit.id == habit_id, Habit.deleted_at.is_(None)).first()
+def undo_completion(db: Session, habit_id: str, completion_date: str | None = None, user_id: str | None = None):
+    filters = [Habit.id == habit_id, Habit.deleted_at.is_(None)]
+    if user_id:
+        filters.append(Habit.user_id == user_id)
+    habit = db.query(Habit).filter(*filters).first()
     if not habit:
         return None
     completed = completion_date or date.today().isoformat()
@@ -102,15 +125,15 @@ def get_habit_completions_for_date(db: Session, habit_id: str, target_date: str)
     ).first()
 
 
-def batch_get_streaks(db: Session, habit_ids: list[str]) -> dict[str, HabitStreak]:
-    streaks = db.query(HabitStreak).filter(HabitStreak.habit_id.in_(habit_ids)).all()
+def batch_get_streaks(db: Session, habit_ids: list[str], user_id: str) -> dict[str, HabitStreak]:
+    streaks = db.query(HabitStreak).filter(HabitStreak.habit_id.in_(habit_ids), HabitStreak.user_id == user_id).all()
     existing_ids = {s.habit_id for s in streaks}
     result = {s.habit_id: s for s in streaks}
     has_new = False
     new_streaks: list[HabitStreak] = []
     for hid in habit_ids:
         if hid not in existing_ids:
-            streak = HabitStreak(habit_id=hid)
+            streak = HabitStreak(habit_id=hid, user_id=user_id)
             db.add(streak)
             result[hid] = streak
             new_streaks.append(streak)
@@ -122,30 +145,32 @@ def batch_get_streaks(db: Session, habit_ids: list[str]) -> dict[str, HabitStrea
     return result
 
 
-def batch_is_completed_today(db: Session, habit_ids: list[str]) -> dict[str, bool]:
+def batch_is_completed_today(db: Session, habit_ids: list[str], user_id: str) -> dict[str, bool]:
     today = date.today().isoformat()
     logs = db.query(HabitLog.habit_id).filter(
         HabitLog.habit_id.in_(habit_ids),
+        HabitLog.user_id == user_id,
         HabitLog.completed_date == today,
     ).all()
     completed_ids = {row[0] for row in logs}
     return {hid: hid in completed_ids for hid in habit_ids}
 
 
-def get_streak(db: Session, habit_id: str):
-    streak = db.query(HabitStreak).filter(HabitStreak.habit_id == habit_id).first()
+def get_streak(db: Session, habit_id: str, user_id: str):
+    streak = db.query(HabitStreak).filter(HabitStreak.habit_id == habit_id, HabitStreak.user_id == user_id).first()
     if not streak:
-        streak = HabitStreak(habit_id=habit_id)
+        streak = HabitStreak(habit_id=habit_id, user_id=user_id)
         db.add(streak)
         db.commit()
         db.refresh(streak)
     return streak
 
 
-def is_habit_completed_today(db: Session, habit_id: str):
+def is_habit_completed_today(db: Session, habit_id: str, user_id: str):
     today = date.today().isoformat()
     log = db.query(HabitLog).filter(
         HabitLog.habit_id == habit_id,
+        HabitLog.user_id == user_id,
         HabitLog.completed_date == today,
     ).first()
     return log is not None
@@ -154,7 +179,9 @@ def is_habit_completed_today(db: Session, habit_id: str):
 def _recalculate_streak(db: Session, habit_id: str):
     streak = db.query(HabitStreak).filter(HabitStreak.habit_id == habit_id).first()
     if not streak:
-        streak = HabitStreak(habit_id=habit_id)
+        habit = db.query(Habit.user_id).filter(Habit.id == habit_id).first()
+        ud = habit[0] if habit else ""
+        streak = HabitStreak(habit_id=habit_id, user_id=ud)
         db.add(streak)
         db.flush()
 
@@ -207,9 +234,9 @@ def _recalculate_streak(db: Session, habit_id: str):
     db.commit()
 
 
-def build_habit_with_streak(db: Session, habit: Habit) -> HabitWithStreak:
-    streak = get_streak(db, habit.id)
-    completed_today = is_habit_completed_today(db, habit.id)
+def build_habit_with_streak(db: Session, habit: Habit, user_id: str) -> HabitWithStreak:
+    streak = get_streak(db, habit.id, user_id)
+    completed_today = is_habit_completed_today(db, habit.id, user_id)
     return HabitWithStreak(
         id=habit.id,
         title=habit.title,

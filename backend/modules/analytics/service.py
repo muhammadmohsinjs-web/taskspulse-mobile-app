@@ -1,3 +1,4 @@
+import calendar
 from datetime import date, datetime, timedelta, timezone
 from collections import defaultdict
 from sqlalchemy.orm import Session
@@ -44,11 +45,11 @@ def _compute_level(count: int, max_count: int) -> int:
     return 4
 
 
-def get_analytics_summary(db: Session) -> AnalyticsSummaryOut:
+def get_analytics_summary(db: Session, user_id: str) -> AnalyticsSummaryOut:
     today = date.today()
 
     # --- Habit completion rate (last 7 days) ---
-    habits_active = db.query(Habit).filter(Habit.deleted_at.is_(None)).all()
+    habits_active = db.query(Habit).filter(Habit.user_id == user_id, Habit.deleted_at.is_(None)).all()
     habit_ids = [h.id for h in habits_active]
 
     habit_bars: list[HabitBar] = []
@@ -102,7 +103,7 @@ def get_analytics_summary(db: Session) -> AnalyticsSummaryOut:
     ]
 
     # --- Goal progress ---
-    goals = db.query(Goal).filter(Goal.deleted_at.is_(None)).all()
+    goals = db.query(Goal).filter(Goal.user_id == user_id, Goal.deleted_at.is_(None)).all()
     goal_progress_list: list[GoalProgress] = []
     for g in goals:
         links = db.query(GoalTaskLink).filter(GoalTaskLink.goal_id == g.id).all()
@@ -148,6 +149,7 @@ def get_analytics_summary(db: Session) -> AnalyticsSummaryOut:
             db.query(func.count(Task.id))
             .filter(
                 Task.deleted_at.is_(None),
+                Task.user_id == user_id,
                 func.date(Task.created_at) == d_iso,
             )
             .scalar()
@@ -157,6 +159,7 @@ def get_analytics_summary(db: Session) -> AnalyticsSummaryOut:
             db.query(func.count(Task.id))
             .filter(
                 Task.deleted_at.is_(None),
+                Task.user_id == user_id,
                 Task.status == "done",
                 Task.completed_at.like(f"{d_iso}%"),
             )
@@ -183,18 +186,18 @@ def get_analytics_summary(db: Session) -> AnalyticsSummaryOut:
     )
 
     # --- Category distribution ---
-    categories = db.query(Category).filter(Category.deleted_at.is_(None)).all()
+    categories = db.query(Category).filter(Category.user_id == user_id, Category.deleted_at.is_(None)).all()
     cat_dist: list[CategoryDistribution] = []
     for c in categories:
         task_count = (
             db.query(func.count(Task.id))
-            .filter(Task.category_id == c.id, Task.deleted_at.is_(None))
+            .filter(Task.category_id == c.id, Task.user_id == user_id, Task.deleted_at.is_(None))
             .scalar()
             or 0
         )
         habit_count = (
             db.query(func.count(Habit.id))
-            .filter(Habit.category_id == c.id, Habit.deleted_at.is_(None))
+            .filter(Habit.category_id == c.id, Habit.user_id == user_id, Habit.deleted_at.is_(None))
             .scalar()
             or 0
         )
@@ -219,12 +222,14 @@ def get_analytics_summary(db: Session) -> AnalyticsSummaryOut:
     )
 
 
-def get_heatmap(db: Session, months: int = 3) -> HeatmapOut:
+def get_heatmap(db: Session, user_id: str, months: int = 3) -> HeatmapOut:
     today = date.today()
     start_month = today.month - months - 1
     start_year = today.year + start_month // 12
     start_month = start_month % 12 + 1
-    start_date = date(start_year, start_month, today.day)
+    max_day = calendar.monthrange(start_year, start_month)[1]
+    start_day = min(today.day, max_day)
+    start_date = date(start_year, start_month, start_day)
 
     days: list[HeatmapDay] = []
     max_count = 0
@@ -232,7 +237,7 @@ def get_heatmap(db: Session, months: int = 3) -> HeatmapOut:
     # Preload all habit logs and task completions in range
     habit_logs = (
         db.query(HabitLog.completed_date, func.count(HabitLog.id))
-        .filter(HabitLog.completed_date >= _iso(start_date))
+        .filter(HabitLog.user_id == user_id, HabitLog.completed_date >= _iso(start_date))
         .group_by(HabitLog.completed_date)
         .all()
     )
@@ -242,6 +247,7 @@ def get_heatmap(db: Session, months: int = 3) -> HeatmapOut:
         db.query(func.substr(Task.completed_at, 1, 10), func.count(Task.id))
         .filter(
             Task.deleted_at.is_(None),
+            Task.user_id == user_id,
             Task.status == "done",
             Task.completed_at >= _iso(start_date),
         )
@@ -255,6 +261,7 @@ def get_heatmap(db: Session, months: int = 3) -> HeatmapOut:
         db.query(func.date(Task.created_at), func.count(Task.id))
         .filter(
             Task.deleted_at.is_(None),
+            Task.user_id == user_id,
             func.date(Task.created_at) >= _iso(start_date),
         )
         .group_by(func.date(Task.created_at))

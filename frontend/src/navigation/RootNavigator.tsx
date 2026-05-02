@@ -1,10 +1,12 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import { ActivityIndicator, View, StyleSheet } from "react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { theme } from "../theme/theme";
 import { AppIcon, icons } from "../components/ui/Icon";
+import { useAuth } from "../features/auth/hooks/useAuth";
 
 interface OnboardingContextValue {
   restartOnboarding: () => Promise<void>;
@@ -34,6 +36,8 @@ import WeeklyPlanningScreen from "../features/planning/screens/WeeklyPlanningScr
 import SettingsScreen from "../features/settings/screens/SettingsScreen";
 import MoreScreen from "../features/more/screens/MoreScreen";
 import OnboardingScreen from "../features/onboarding/screens/OnboardingScreen";
+import LoginScreen from "../features/auth/screens/LoginScreen";
+import RegisterScreen from "../features/auth/screens/RegisterScreen";
 
 const Tab = createBottomTabNavigator();
 const MoreStack = createNativeStackNavigator();
@@ -41,6 +45,7 @@ const TodayStack = createNativeStackNavigator();
 const CalendarStack = createNativeStackNavigator();
 const GoalsStack = createNativeStackNavigator();
 const RootStack = createNativeStackNavigator();
+const AuthStack = createNativeStackNavigator();
 
 const ONBOARDING_KEY = "@taskspulse_has_seen_onboarding";
 
@@ -49,6 +54,17 @@ const stackScreenOptions = {
   headerTintColor: theme.colors.primary,
   headerStyle: { backgroundColor: theme.colors.background },
 };
+
+const AuthStackNavigator = () => (
+  <AuthStack.Navigator screenOptions={{ headerShown: false }}>
+    <AuthStack.Screen name="Login" component={LoginScreen} />
+    <AuthStack.Screen
+      name="Register"
+      component={RegisterScreen}
+      options={{ ...stackScreenOptions, headerTitle: "Create Account" }}
+    />
+  </AuthStack.Navigator>
+);
 
 const TodayStackNavigator = () => (
   <TodayStack.Navigator screenOptions={{ headerShown: false }}>
@@ -153,8 +169,45 @@ const TabIcon = ({ label, focused }: { label: string; focused: boolean }) => {
   );
 };
 
-const RootNavigator: React.FC = () => {
+const LoadingScreen = () => (
+  <View style={styles.loadingContainer}>
+    <ActivityIndicator size="large" color={theme.colors.primary} />
+  </View>
+);
+
+const MainTabNavigator = () => {
   const insets = useSafeAreaInsets();
+  return (
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
+        headerShown: false,
+        tabBarIcon: ({ focused }) => <TabIcon label={route.name} focused={focused} />,
+        tabBarActiveTintColor: theme.colors.primary,
+        tabBarInactiveTintColor: theme.colors.textMuted,
+        tabBarStyle: {
+          backgroundColor: theme.colors.surface,
+          borderTopColor: theme.colors.border,
+          paddingBottom: 6 + insets.bottom,
+          paddingTop: 6,
+          height: 64 + insets.bottom,
+        },
+        tabBarLabelStyle: {
+          fontSize: theme.fontSize.xs,
+          fontWeight: "600",
+        },
+      })}
+    >
+      <Tab.Screen name="Today" component={TodayStackNavigator} />
+      <Tab.Screen name="Calendar" component={CalendarStackNavigator} />
+      <Tab.Screen name="Backlog" component={BacklogScreen} />
+      <Tab.Screen name="Goals" component={GoalsStackNavigator} />
+      <Tab.Screen name="More" component={MoreStackNavigator} />
+    </Tab.Navigator>
+  );
+};
+
+const RootNavigator: React.FC = () => {
+  const { isAuthenticated, isBootstrapping } = useAuth();
   const [hasSeenOnboarding, setHasSeenOnboarding] = useState<boolean | null>(null);
 
   useEffect(() => {
@@ -187,9 +240,9 @@ const RootNavigator: React.FC = () => {
     setHasSeenOnboarding(false);
   }, []);
 
-  // Show loading while checking onboarding status
-  if (hasSeenOnboarding === null) {
-    return null;
+  // Show loading while checking onboarding status or bootstrapping auth
+  if (hasSeenOnboarding === null || isBootstrapping) {
+    return <LoadingScreen />;
   }
 
   return (
@@ -204,40 +257,23 @@ const RootNavigator: React.FC = () => {
               />
             )}
           </RootStack.Screen>
+        ) : !isAuthenticated ? (
+          <RootStack.Screen name="Auth" component={AuthStackNavigator} />
         ) : (
-          <RootStack.Screen name="MainApp">
-            {() => (
-              <Tab.Navigator
-                screenOptions={({ route }) => ({
-                  headerShown: false,
-                  tabBarIcon: ({ focused }) => <TabIcon label={route.name} focused={focused} />,
-                  tabBarActiveTintColor: theme.colors.primary,
-                  tabBarInactiveTintColor: theme.colors.textMuted,
-                  tabBarStyle: {
-                    backgroundColor: theme.colors.surface,
-                    borderTopColor: theme.colors.border,
-                    paddingBottom: 6 + insets.bottom,
-                    paddingTop: 6,
-                    height: 64 + insets.bottom,
-                  },
-                  tabBarLabelStyle: {
-                    fontSize: theme.fontSize.xs,
-                    fontWeight: "600",
-                  },
-                })}
-              >
-                <Tab.Screen name="Today" component={TodayStackNavigator} />
-                <Tab.Screen name="Calendar" component={CalendarStackNavigator} />
-                <Tab.Screen name="Backlog" component={BacklogScreen} />
-                <Tab.Screen name="Goals" component={GoalsStackNavigator} />
-                <Tab.Screen name="More" component={MoreStackNavigator} />
-              </Tab.Navigator>
-            )}
-          </RootStack.Screen>
+          <RootStack.Screen name="MainApp" component={MainTabNavigator} />
         )}
       </RootStack.Navigator>
     </OnboardingContext.Provider>
   );
 };
+
+const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: theme.colors.background,
+  },
+});
 
 export default RootNavigator;

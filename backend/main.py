@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import text
 from database import engine, Base, get_db
 
+from modules.auth.router import router as auth_router
 from modules.tasks.router import router as tasks_router
 from modules.categories.router import router as categories_router
 from modules.habits.router import router as habits_router
@@ -17,6 +18,9 @@ from modules.planning.router import router as planning_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    # NOTE: Base.metadata.create_all() creates missing tables but does NOT
+    # add new columns to existing tables. If auth/user_id columns were added
+    # after the DB was created, delete taskspulse.db and restart to recreate.
     Base.metadata.create_all(bind=engine)
     yield
 
@@ -33,6 +37,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(auth_router, prefix="/auth", tags=["auth"])
 app.include_router(tasks_router, prefix="/tasks", tags=["tasks"])
 app.include_router(categories_router, prefix="/categories", tags=["categories"])
 app.include_router(habits_router, prefix="/habits", tags=["habits"])

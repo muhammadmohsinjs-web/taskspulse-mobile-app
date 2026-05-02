@@ -5,16 +5,19 @@ from modules.categories.models import Category
 from modules.categories.schemas import CategoryCreate, CategoryUpdate
 
 
-def get_categories(db: Session):
-    return db.query(Category).filter(Category.deleted_at.is_(None)).order_by(Category.name).all()
+def get_categories(db: Session, user_id: str):
+    return db.query(Category).filter(Category.user_id == user_id, Category.deleted_at.is_(None)).order_by(Category.name).all()
 
 
-def get_category(db: Session, category_id: str):
-    return db.query(Category).filter(Category.id == category_id, Category.deleted_at.is_(None)).first()
+def get_category(db: Session, category_id: str, user_id: str | None = None):
+    filters = [Category.id == category_id, Category.deleted_at.is_(None)]
+    if user_id:
+        filters.append(Category.user_id == user_id)
+    return db.query(Category).filter(*filters).first()
 
 
-def create_category(db: Session, category: CategoryCreate):
-    db_cat = Category(**category.model_dump())
+def create_category(db: Session, category: CategoryCreate, user_id: str):
+    db_cat = Category(**category.model_dump(), user_id=user_id)
     db.add(db_cat)
     try:
         db.commit()
@@ -25,8 +28,8 @@ def create_category(db: Session, category: CategoryCreate):
     return db_cat
 
 
-def update_category(db: Session, category_id: str, category: CategoryUpdate):
-    db_cat = db.query(Category).filter(Category.id == category_id, Category.deleted_at.is_(None)).first()
+def update_category(db: Session, category_id: str, category: CategoryUpdate, user_id: str):
+    db_cat = db.query(Category).filter(Category.id == category_id, Category.user_id == user_id, Category.deleted_at.is_(None)).first()
     if not db_cat:
         return None
     update_data = category.model_dump(exclude_unset=True)
@@ -41,8 +44,8 @@ def update_category(db: Session, category_id: str, category: CategoryUpdate):
     return db_cat
 
 
-def delete_category(db: Session, category_id: str):
-    db_cat = db.query(Category).filter(Category.id == category_id, Category.deleted_at.is_(None)).first()
+def delete_category(db: Session, category_id: str, user_id: str):
+    db_cat = db.query(Category).filter(Category.id == category_id, Category.user_id == user_id, Category.deleted_at.is_(None)).first()
     if not db_cat:
         return None
     db_cat.deleted_at = datetime.now(timezone.utc).isoformat()

@@ -17,6 +17,8 @@ const DEFAULT_TIMEOUT = 15000;
 interface RequestOptions extends Omit<RequestInit, "body"> {
   body?: unknown;
   timeout?: number;
+  skipAuth?: boolean;
+  skipRefresh?: boolean;
 }
 
 class ApiError extends Error {
@@ -28,6 +30,31 @@ class ApiError extends Error {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Auth handler configuration (set by AuthProvider to avoid circular imports)
+// ---------------------------------------------------------------------------
+type GetAccessTokenFn = () => Promise<string | null>;
+type RefreshSessionFn = () => Promise<string | null>;
+type LogoutFn = () => Promise<void>;
+
+let _getAccessToken: GetAccessTokenFn | null = null;
+let _refreshSession: RefreshSessionFn | null = null;
+let _logout: LogoutFn | null = null;
+let _refreshPromise: Promise<string | null> | null = null;
+
+export function configureAuthHandlers(handlers: {
+  getAccessToken: GetAccessTokenFn;
+  refreshSession: RefreshSessionFn;
+  logout: LogoutFn;
+}) {
+  _getAccessToken = handlers.getAccessToken;
+  _refreshSession = handlers.refreshSession;
+  _logout = handlers.logout;
+}
+
+// ---------------------------------------------------------------------------
+// Request function
+// ---------------------------------------------------------------------------
 async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const controller = new AbortController();
   const timeout = options.timeout ?? DEFAULT_TIMEOUT;
@@ -36,16 +63,65 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
   }, timeout);
 
   try {
-    const { body, ...rest } = options;
+    const { body, skipAuth, skipRefresh, ...rest } = options;
+
+    // Build headers
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+      ...(rest.headers as Record<string, string> | undefined),
+    };
+
+    // Attach access token if available and not skipped
+    if (!skipAuth && _getAccessToken) {
+      const token = await _getAccessToken();
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
+    }
+
     const res = await fetch(`${BASE_URL}${path}`, {
       ...rest,
-      headers: {
-        "Content-Type": "application/json",
-        ...rest.headers,
-      },
+      headers,
       body: body ? JSON.stringify(body) : undefined,
       signal: mergeSignals(controller.signal, rest.signal),
     });
+
+    // Handle 401 with auto-refresh (unless skipped)
+    if (res.status === 401 && !skipAuth && !skipRefresh && _refreshSession && _logout) {
+      // Single-flight refresh: if another request is already refreshing, wait for it
+      if (!_refreshPromise) {
+        _refreshPromise = _refreshSession().finally(() => {
+          _refreshPromise = null;
+        });
+      }
+      const newToken = await _refreshPromise;
+      if (newToken) {
+        // Retry the request once with the new token
+        headers["Authorization"] = `Bearer ${newToken}`;
+        const retryRes = await fetch(`${BASE_URL}${path}`, {
+          ...rest,
+          headers,
+          body: body ? JSON.stringify(body) : undefined,
+          signal: mergeSignals(controller.signal, rest.signal),
+        });
+
+        if (retryRes.ok) {
+          if (retryRes.status === 204) return null as T;
+          return retryRes.json();
+        }
+
+        // If retry still fails, throw
+        const retryErr = await retryRes.json().catch(() => ({}));
+        throw new ApiError(
+          retryErr.detail || retryErr.message || `Request failed: ${retryRes.status}`,
+          retryRes.status
+        );
+      } else {
+        // Refresh failed - log out
+        await _logout();
+        throw new ApiError("Session expired. Please log in again.", 401);
+      }
+    }
 
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
@@ -55,11 +131,7 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
       );
     }
 
-    // DELETE endpoints return 204 No Content with no response body.
-    // Callers (tasksApi.delete, habitsApi.delete, etc.) are typed Promise<void>
-    // and discard the return value, so null is safe in practice.
-    // If a non-DELETE endpoint ever returns 204 unexpectedly, callers
-    // that cast to a concrete type (e.g. TaskRaw) would get null at runtime.
+    // DELETE endpoints return 204 No Content
     if (res.status === 204) return null as T;
     return res.json();
   } catch (e) {
@@ -90,10 +162,21 @@ function mergeSignals(signal1: AbortSignal, signal2?: AbortSignal): AbortSignal 
 }
 
 export const apiClient = {
-  get: <T>(path: string, signal?: AbortSignal) => request<T>(path, { signal }),
-  post: <T>(path: string, body?: unknown, signal?: AbortSignal) => request<T>(path, { method: "POST", body, signal }),
-  put: <T>(path: string, body?: unknown, signal?: AbortSignal) => request<T>(path, { method: "PUT", body, signal }),
-  delete: <T>(path: string, signal?: AbortSignal) => request<T>(path, { method: "DELETE", signal }),
+  get: <T>(path: string, signal?: AbortSignal) =>
+    request<T>(path, { method: "GET", signal }),
+
+  post: <T>(path: string, body?: unknown, signal?: AbortSignal) =>
+    request<T>(path, { method: "POST", body, signal }),
+
+  put: <T>(path: string, body?: unknown, signal?: AbortSignal) =>
+    request<T>(path, { method: "PUT", body, signal }),
+
+  delete: <T>(path: string, signal?: AbortSignal) =>
+    request<T>(path, { method: "DELETE", signal }),
+
+  // Raw request with full options for auth endpoints (skip refresh)
+  request: <T>(path: string, options: RequestOptions = {}) =>
+    request<T>(path, options),
 };
 
 export { ApiError };

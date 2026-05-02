@@ -5,30 +5,30 @@ from modules.tasks.models import Task
 from modules.goals.schemas import GoalCreate, GoalUpdate, GoalTaskLinkCreate, GoalOut
 
 
-def _compute_progress(db: Session, goal_id: str):
-    links = db.query(GoalTaskLink).filter(GoalTaskLink.goal_id == goal_id).all()
+def _compute_progress(db: Session, goal_id: str, user_id: str):
+    links = db.query(GoalTaskLink).filter(GoalTaskLink.goal_id == goal_id, GoalTaskLink.user_id == user_id).all()
     total = len(links)
     if total == 0:
         return 0.0, 0, 0
     task_ids = [link.task_id for link in links]
-    tasks = db.query(Task).filter(Task.id.in_(task_ids), Task.deleted_at.is_(None)).all()
+    tasks = db.query(Task).filter(Task.id.in_(task_ids), Task.user_id == user_id, Task.deleted_at.is_(None)).all()
     task_status_map = {t.id: t.status for t in tasks}
     completed = sum(1 for link in links if task_status_map.get(link.task_id) == "done")
     progress = completed / total if total > 0 else 0.0
     return progress, total, completed
 
 
-def _batch_compute_progress(db: Session, goal_ids: list[str]) -> dict[str, tuple[float, int, int]]:
+def _batch_compute_progress(db: Session, goal_ids: list[str], user_id: str) -> dict[str, tuple[float, int, int]]:
     if not goal_ids:
         return {}
-    links = db.query(GoalTaskLink).filter(GoalTaskLink.goal_id.in_(goal_ids)).all()
+    links = db.query(GoalTaskLink).filter(GoalTaskLink.goal_id.in_(goal_ids), GoalTaskLink.user_id == user_id).all()
     goal_link_map: dict[str, list[GoalTaskLink]] = {gid: [] for gid in goal_ids}
     for link in links:
         goal_link_map[link.goal_id].append(link)
     all_task_ids = list({link.task_id for link in links})
     task_status_map: dict[str, str] = {}
     if all_task_ids:
-        tasks = db.query(Task).filter(Task.id.in_(all_task_ids), Task.deleted_at.is_(None)).all()
+        tasks = db.query(Task).filter(Task.id.in_(all_task_ids), Task.user_id == user_id, Task.deleted_at.is_(None)).all()
         task_status_map = {t.id: t.status for t in tasks}
     result: dict[str, tuple[float, int, int]] = {}
     for gid in goal_ids:
@@ -42,8 +42,8 @@ def _batch_compute_progress(db: Session, goal_ids: list[str]) -> dict[str, tuple
     return result
 
 
-def _goal_to_out(db: Session, goal: Goal) -> GoalOut:
-    progress, total, completed = _compute_progress(db, goal.id)
+def _goal_to_out(db: Session, goal: Goal, user_id: str) -> GoalOut:
+    progress, total, completed = _compute_progress(db, goal.id, user_id)
     return GoalOut(
         id=goal.id,
         title=goal.title,
@@ -59,10 +59,13 @@ def _goal_to_out(db: Session, goal: Goal) -> GoalOut:
     )
 
 
-def get_goals(db: Session) -> list[GoalOut]:
-    goals = db.query(Goal).filter(Goal.deleted_at.is_(None)).order_by(Goal.created_at.desc()).all()
+def get_goals(db: Session, user_id: str | None = None) -> list[GoalOut]:
+    filters = [Goal.deleted_at.is_(None)]
+    if user_id:
+        filters.append(Goal.user_id == user_id)
+    goals = db.query(Goal).filter(*filters).order_by(Goal.created_at.desc()).all()
     goal_ids = [g.id for g in goals]
-    progress_map = _batch_compute_progress(db, goal_ids)
+    progress_map = _batch_compute_progress(db, goal_ids, user_id) if user_id else _batch_compute_progress(db, goal_ids, "")
     results = []
     for g in goals:
         p, total, completed = progress_map.get(g.id, (0.0, 0, 0))
@@ -82,23 +85,26 @@ def get_goals(db: Session) -> list[GoalOut]:
     return results
 
 
-def get_goal(db: Session, goal_id: str) -> GoalOut | None:
-    goal = db.query(Goal).filter(Goal.id == goal_id, Goal.deleted_at.is_(None)).first()
+def get_goal(db: Session, goal_id: str, user_id: str | None = None) -> GoalOut | None:
+    filters = [Goal.id == goal_id, Goal.deleted_at.is_(None)]
+    if user_id:
+        filters.append(Goal.user_id == user_id)
+    goal = db.query(Goal).filter(*filters).first()
     if not goal:
         return None
-    return _goal_to_out(db, goal)
+    return _goal_to_out(db, goal, user_id or goal.user_id)
 
 
-def create_goal(db: Session, data: GoalCreate) -> GoalOut:
-    goal = Goal(**data.model_dump())
+def create_goal(db: Session, data: GoalCreate, user_id: str) -> GoalOut:
+    goal = Goal(**data.model_dump(), user_id=user_id)
     db.add(goal)
     db.commit()
     db.refresh(goal)
-    return _goal_to_out(db, goal)
+    return _goal_to_out(db, goal, user_id)
 
 
-def update_goal(db: Session, goal_id: str, data: GoalUpdate) -> GoalOut | None:
-    goal = db.query(Goal).filter(Goal.id == goal_id, Goal.deleted_at.is_(None)).first()
+def update_goal(db: Session, goal_id: str, data: GoalUpdate, user_id: str) -> GoalOut | None:
+    goal = db.query(Goal).filter(Goal.id == goal_id, Goal.user_id == user_id, Goal.deleted_at.is_(None)).first()
     if not goal:
         return None
     update_data = data.model_dump(exclude_unset=True)
@@ -106,25 +112,25 @@ def update_goal(db: Session, goal_id: str, data: GoalUpdate) -> GoalOut | None:
         setattr(goal, key, value)
     db.commit()
     db.refresh(goal)
-    return _goal_to_out(db, goal)
+    return _goal_to_out(db, goal, user_id)
 
 
-def delete_goal(db: Session, goal_id: str) -> bool:
-    goal = db.query(Goal).filter(Goal.id == goal_id, Goal.deleted_at.is_(None)).first()
+def delete_goal(db: Session, goal_id: str, user_id: str) -> bool:
+    goal = db.query(Goal).filter(Goal.id == goal_id, Goal.user_id == user_id, Goal.deleted_at.is_(None)).first()
     if not goal:
         return False
     # Clean up orphaned links before soft-deleting
-    db.query(GoalTaskLink).filter(GoalTaskLink.goal_id == goal_id).delete()
+    db.query(GoalTaskLink).filter(GoalTaskLink.goal_id == goal_id, GoalTaskLink.user_id == user_id).delete()
     goal.deleted_at = datetime.now(timezone.utc).isoformat()
     db.commit()
     return True
 
 
-def link_task_to_goal(db: Session, goal_id: str, task_id: str) -> tuple[GoalTaskLink | None, bool]:
-    goal = db.query(Goal).filter(Goal.id == goal_id, Goal.deleted_at.is_(None)).first()
+def link_task_to_goal(db: Session, goal_id: str, task_id: str, user_id: str) -> tuple[GoalTaskLink | None, bool]:
+    goal = db.query(Goal).filter(Goal.id == goal_id, Goal.user_id == user_id, Goal.deleted_at.is_(None)).first()
     if not goal:
         return None, False
-    task = db.query(Task).filter(Task.id == task_id, Task.deleted_at.is_(None)).first()
+    task = db.query(Task).filter(Task.id == task_id, Task.user_id == user_id, Task.deleted_at.is_(None)).first()
     if not task:
         return None, False
     existing = db.query(GoalTaskLink).filter(
@@ -132,17 +138,18 @@ def link_task_to_goal(db: Session, goal_id: str, task_id: str) -> tuple[GoalTask
     ).first()
     if existing:
         return existing, True
-    link = GoalTaskLink(goal_id=goal_id, task_id=task_id)
+    link = GoalTaskLink(goal_id=goal_id, task_id=task_id, user_id=user_id)
     db.add(link)
     db.commit()
     db.refresh(link)
     return link, False
 
 
-def unlink_task_from_goal(db: Session, goal_id: str, task_id: str) -> bool:
-    link = db.query(GoalTaskLink).filter(
-        GoalTaskLink.goal_id == goal_id, GoalTaskLink.task_id == task_id
-    ).first()
+def unlink_task_from_goal(db: Session, goal_id: str, task_id: str, user_id: str | None = None) -> bool:
+    filters = [GoalTaskLink.goal_id == goal_id, GoalTaskLink.task_id == task_id]
+    if user_id:
+        filters.append(GoalTaskLink.user_id == user_id)
+    link = db.query(GoalTaskLink).filter(*filters).first()
     if not link:
         return False
     db.delete(link)
@@ -150,5 +157,5 @@ def unlink_task_from_goal(db: Session, goal_id: str, task_id: str) -> bool:
     return True
 
 
-def get_goal_task_links(db: Session, goal_id: str) -> list[GoalTaskLink]:
-    return db.query(GoalTaskLink).filter(GoalTaskLink.goal_id == goal_id).all()
+def get_goal_task_links(db: Session, goal_id: str, user_id: str) -> list[GoalTaskLink]:
+    return db.query(GoalTaskLink).filter(GoalTaskLink.goal_id == goal_id, GoalTaskLink.user_id == user_id).all()

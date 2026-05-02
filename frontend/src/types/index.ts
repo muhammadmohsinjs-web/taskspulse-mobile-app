@@ -1,3 +1,5 @@
+export type { AuthUser, AuthUserRaw, LoginPayload, RegisterPayload, AuthResponseRaw, TokenPairRaw, TokenResponseRaw } from "./auth";
+export { mapAuthUser } from "./auth";
 export type { Task, TaskRaw, TaskCreatePayload, TaskUpdatePayload } from "./task";
 export { mapTask } from "./task";
 export type { Habit, HabitRaw, HabitCreatePayload, HabitUpdatePayload, HabitStreak, HabitStreakRaw } from "./habit";

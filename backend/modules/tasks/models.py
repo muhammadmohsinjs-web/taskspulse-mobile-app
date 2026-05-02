@@ -6,6 +6,7 @@ from modules.utils import generate_uuid
 class Task(Base):
     __tablename__ = "tasks"
     __table_args__ = (
+        Index("idx_tasks_user_id", "user_id"),
         Index("idx_tasks_category_id", "category_id"),
         Index("idx_tasks_status", "status"),
         Index("idx_tasks_due_date", "due_date"),
@@ -13,6 +14,7 @@ class Task(Base):
     )
 
     id = Column(String, primary_key=True, default=generate_uuid)
+    user_id = Column(String, ForeignKey("users.id"), nullable=False, index=True)
     title = Column(String, nullable=False)
     description = Column(String, default="")
     status = Column(String, nullable=False, default="todo")

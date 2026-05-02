@@ -11,6 +11,7 @@ import {
 import { theme } from "../../../theme/theme";
 import Card from "../../../components/ui/Card";
 import { useOnboarding } from "../../../navigation/RootNavigator";
+import { useAuth } from "../../auth/hooks/useAuth";
 
 interface SettingRowProps {
   label: string;
@@ -39,6 +40,7 @@ const SettingRow: React.FC<SettingRowProps> = ({ label, value, onPress, danger }
 
 const SettingsScreen: React.FC = () => {
   const { restartOnboarding } = useOnboarding();
+  const { user, logout } = useAuth();
 
   const handleResetData = () => {
     Alert.alert(
@@ -72,6 +74,23 @@ const SettingsScreen: React.FC = () => {
     );
   };
 
+  const handleLogout = () => {
+    Alert.alert(
+      "Logout",
+      "Are you sure you want to log out?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Logout",
+          style: "destructive",
+          onPress: async () => {
+            await logout();
+          },
+        },
+      ]
+    );
+  };
+
   return (
     <ScrollView style={styles.container}>
       <Text style={styles.sectionTitle}>About</Text>
@@ -83,9 +102,26 @@ const SettingsScreen: React.FC = () => {
         <SettingRow label="Frontend" value="React Native + Expo" />
       </Card>
 
+      {user && (
+        <>
+          <Text style={styles.sectionTitle}>Account</Text>
+          <Card style={styles.card}>
+            <SettingRow label="Email" value={user.email} />
+            <View style={styles.divider} />
+            <SettingRow label="Display Name" value={user.displayName || "—"} />
+            <View style={styles.divider} />
+            <SettingRow
+              label="Logout"
+              onPress={handleLogout}
+              danger
+            />
+          </Card>
+        </>
+      )}
+
       <Text style={styles.sectionTitle}>Data</Text>
       <Card style={styles.card}>
-        <SettingRow label="Data Location" value="Local SQLite" />
+        <SettingRow label="Data Location" value="Backend SQLite" />
       </Card>
 
       <Text style={styles.sectionTitle}>Danger Zone</Text>

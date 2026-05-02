@@ -6,16 +6,16 @@ from modules.habits import service as habit_service
 from modules.cockpit.schemas import CockpitHabit, CockpitTask, CockpitGlobalStreak, DailyCockpitOut
 
 
-def get_daily_cockpit(db: Session) -> DailyCockpitOut:
+def get_daily_cockpit(db: Session, user_id: str) -> DailyCockpitOut:
     today = date.today().isoformat()
 
     # Active habits
-    habits = db.query(Habit).filter(Habit.deleted_at.is_(None)).order_by(Habit.created_at).all()
+    habits = db.query(Habit).filter(Habit.user_id == user_id, Habit.deleted_at.is_(None)).order_by(Habit.created_at).all()
     habit_ids = [h.id for h in habits]
 
     # Batch load streaks and completion status
-    streaks = habit_service.batch_get_streaks(db, habit_ids)
-    completions = habit_service.batch_is_completed_today(db, habit_ids)
+    streaks = habit_service.batch_get_streaks(db, habit_ids, user_id)
+    completions = habit_service.batch_is_completed_today(db, habit_ids, user_id)
 
     cockpit_habits = []
     completed_count = 0
@@ -43,6 +43,7 @@ def get_daily_cockpit(db: Session) -> DailyCockpitOut:
     tasks = (
         db.query(Task)
         .filter(
+            Task.user_id == user_id,
             Task.deleted_at.is_(None),
             ((Task.due_date == today) & (Task.status.in_(["todo", "in_progress"])))
             | ((Task.due_date.is_(None)) & (Task.status.in_(["todo", "in_progress"]))),

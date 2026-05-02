@@ -5,6 +5,7 @@ import { NavigationContainer } from "@react-navigation/native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { QueryClient, QueryClientProvider, MutationCache } from "@tanstack/react-query";
 import RootNavigator from "./src/navigation/RootNavigator";
+import { AuthProvider } from "./src/features/auth/context/AuthContext";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -29,10 +30,12 @@ const queryClient = new QueryClient({
 const App: React.FC = () => (
   <QueryClientProvider client={queryClient}>
     <SafeAreaProvider>
-      <NavigationContainer>
-        <StatusBar style="auto" />
-        <RootNavigator />
-      </NavigationContainer>
+      <AuthProvider>
+        <NavigationContainer>
+          <StatusBar style="auto" />
+          <RootNavigator />
+        </NavigationContainer>
+      </AuthProvider>
     </SafeAreaProvider>
   </QueryClientProvider>
 );

@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 from sqlalchemy.orm import Session
 from modules.tasks.models import Task
 from modules.tasks.schemas import TaskCreate, TaskUpdate, TaskOut
+from modules.categories.models import Category
 from modules.goals.models import GoalTaskLink
 
 
@@ -30,6 +31,7 @@ def _task_to_out(db: Session, task: Task) -> TaskOut:
 
 def get_tasks(
     db: Session,
+    user_id: str,
     skip: int = 0,
     limit: int = 100,
     date: str | None = None,
@@ -39,7 +41,7 @@ def get_tasks(
     task_ids: list[str] | None = None,
     is_backlog: bool = False,
 ) -> list[TaskOut]:
-    query = db.query(Task).filter(Task.deleted_at.is_(None))
+    query = db.query(Task).filter(Task.deleted_at.is_(None), Task.user_id == user_id)
     if task_ids:
         query = query.filter(Task.id.in_(task_ids))
     elif month:
@@ -56,26 +58,38 @@ def get_tasks(
     return [_task_to_out(db, t) for t in tasks]
 
 
-def get_task(db: Session, task_id: str) -> TaskOut | None:
-    task = db.query(Task).filter(Task.id == task_id, Task.deleted_at.is_(None)).first()
+def get_task(db: Session, task_id: str, user_id: str | None = None) -> TaskOut | None:
+    filters = [Task.id == task_id, Task.deleted_at.is_(None)]
+    if user_id:
+        filters.append(Task.user_id == user_id)
+    task = db.query(Task).filter(*filters).first()
     if not task:
         return None
     return _task_to_out(db, task)
 
 
-def create_task(db: Session, task: TaskCreate) -> TaskOut:
-    db_task = Task(**task.model_dump())
+def create_task(db: Session, task: TaskCreate, user_id: str) -> TaskOut:
+    data = task.model_dump()
+    if data.get("category_id"):
+        cat = db.query(Category).filter(Category.id == data["category_id"], Category.user_id == user_id).first()
+        if not cat:
+            raise ValueError("Category not found")
+    db_task = Task(**data, user_id=user_id)
     db.add(db_task)
     db.commit()
     db.refresh(db_task)
     return _task_to_out(db, db_task)
 
 
-def update_task(db: Session, task_id: str, task: TaskUpdate) -> TaskOut | None:
-    db_task = db.query(Task).filter(Task.id == task_id, Task.deleted_at.is_(None)).first()
+def update_task(db: Session, task_id: str, task: TaskUpdate, user_id: str) -> TaskOut | None:
+    db_task = db.query(Task).filter(Task.id == task_id, Task.user_id == user_id, Task.deleted_at.is_(None)).first()
     if not db_task:
         return None
     update_data = task.model_dump(exclude_unset=True)
+    if "category_id" in update_data and update_data["category_id"]:
+        cat = db.query(Category).filter(Category.id == update_data["category_id"], Category.user_id == user_id).first()
+        if not cat:
+            raise ValueError("Category not found")
     if "status" in update_data and "completed_at" not in update_data:
         if update_data["status"] == "done" and db_task.status != "done":
             update_data["completed_at"] = datetime.now(timezone.utc).isoformat()
@@ -88,8 +102,8 @@ def update_task(db: Session, task_id: str, task: TaskUpdate) -> TaskOut | None:
     return _task_to_out(db, db_task)
 
 
-def delete_task(db: Session, task_id: str):
-    db_task = db.query(Task).filter(Task.id == task_id, Task.deleted_at.is_(None)).first()
+def delete_task(db: Session, task_id: str, user_id: str):
+    db_task = db.query(Task).filter(Task.id == task_id, Task.user_id == user_id, Task.deleted_at.is_(None)).first()
     if not db_task:
         return None
     db_task.deleted_at = datetime.now(timezone.utc).isoformat()

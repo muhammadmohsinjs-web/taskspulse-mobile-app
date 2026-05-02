@@ -36,19 +36,19 @@ def _week_start_from_date(d: date) -> date:
     return d - timedelta(days=d.weekday())
 
 
-def _get_tasks_for_day(db: Session, d: date) -> list[Task]:
+def _get_tasks_for_day(db: Session, d: date, user_id: str | None = None) -> list[Task]:
     d_iso = _iso(d)
+    filters = [Task.deleted_at.is_(None), Task.due_date == d_iso]
+    if user_id:
+        filters.append(Task.user_id == user_id)
     return (
         db.query(Task)
-        .filter(
-            Task.deleted_at.is_(None),
-            Task.due_date == d_iso,
-        )
+        .filter(*filters)
         .all()
     )
 
 
-def get_week_view(db: Session, date_str: str | None = None) -> WeekViewOut:
+def get_week_view(db: Session, user_id: str, date_str: str | None = None) -> WeekViewOut:
     today = date.today()
     target = date.fromisoformat(date_str) if date_str else today
     week_start = _week_start_from_date(target)
@@ -59,7 +59,7 @@ def get_week_view(db: Session, date_str: str | None = None) -> WeekViewOut:
 
     for i in range(7):
         d = week_start + timedelta(days=i)
-        tasks = _get_tasks_for_day(db, d)
+        tasks = _get_tasks_for_day(db, d, user_id=user_id)
         count = len(tasks)
         total_tasks += count
         if count > max_tasks:
@@ -88,7 +88,7 @@ def get_week_view(db: Session, date_str: str | None = None) -> WeekViewOut:
     )
 
 
-def get_focus_queue(db: Session) -> FocusQueueOut:
+def get_focus_queue(db: Session, user_id: str) -> FocusQueueOut:
     today = date.today()
     today_iso = _iso(today)
 
@@ -96,6 +96,7 @@ def get_focus_queue(db: Session) -> FocusQueueOut:
         db.query(Task)
         .filter(
             Task.deleted_at.is_(None),
+            Task.user_id == user_id,
             Task.status != "done",
         )
         .all()
@@ -140,7 +141,7 @@ def get_focus_queue(db: Session) -> FocusQueueOut:
     )
 
 
-def auto_balance(db: Session, week_start_str: str, max_tasks_per_day: int) -> AutoBalanceResponse:
+def auto_balance(db: Session, user_id: str, week_start_str: str, max_tasks_per_day: int) -> AutoBalanceResponse:
     week_start = date.fromisoformat(week_start_str)
     week_start = _week_start_from_date(week_start)
 
@@ -148,7 +149,7 @@ def auto_balance(db: Session, week_start_str: str, max_tasks_per_day: int) -> Au
 
     for i in range(7):
         current_day = week_start + timedelta(days=i)
-        day_tasks = _get_tasks_for_day(db, current_day)
+        day_tasks = _get_tasks_for_day(db, current_day, user_id=user_id)
 
         if len(day_tasks) <= max_tasks_per_day:
             continue
@@ -158,7 +159,7 @@ def auto_balance(db: Session, week_start_str: str, max_tasks_per_day: int) -> Au
         for j in range(1, 8):
             target_day = current_day + timedelta(days=j)
 
-            target_tasks = _get_tasks_for_day(db, target_day)
+            target_tasks = _get_tasks_for_day(db, target_day, user_id=user_id)
             slots_available = max_tasks_per_day - len(target_tasks)
             if slots_available <= 0:
                 continue
@@ -175,7 +176,7 @@ def auto_balance(db: Session, week_start_str: str, max_tasks_per_day: int) -> Au
     balanced_days: list[WeekDay] = []
     for i in range(7):
         d = week_start + timedelta(days=i)
-        tasks = _get_tasks_for_day(db, d)
+        tasks = _get_tasks_for_day(db, d, user_id=user_id)
         count = len(tasks)
         balanced_days.append(
             WeekDay(
@@ -195,7 +196,7 @@ def auto_balance(db: Session, week_start_str: str, max_tasks_per_day: int) -> Au
     )
 
 
-def carry_forward(db: Session, target_week_start: str) -> CarryForwardResponse:
+def carry_forward(db: Session, user_id: str, target_week_start: str) -> CarryForwardResponse:
     today = date.today()
     today_iso = _iso(today)
     target_start = date.fromisoformat(target_week_start)
@@ -207,6 +208,7 @@ def carry_forward(db: Session, target_week_start: str) -> CarryForwardResponse:
         db.query(Task)
         .filter(
             Task.deleted_at.is_(None),
+            Task.user_id == user_id,
             Task.status != "done",
             Task.due_date.isnot(None),
             Task.due_date < today_iso,
