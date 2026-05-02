@@ -1,4 +1,5 @@
 from datetime import datetime, timezone, timedelta
+from fastapi import BackgroundTasks
 from sqlalchemy.orm import Session
 from sqlalchemy import and_
 
@@ -22,6 +23,11 @@ from modules.auth.security import (
     hash_email_verification_token,
     ACCESS_TOKEN_EXPIRE_MINUTES,
     REFRESH_TOKEN_EXPIRE_DAYS,
+)
+from modules.auth.email_service import (
+    send_verification_email,
+    build_verification_url,
+    EMAIL_DEBUG_PRINT_TOKENS,
 )
 
 
@@ -88,7 +94,9 @@ def get_user_by_email(db: Session, email: str) -> User | None:
     return db.query(User).filter(User.email == email, User.is_active.is_(True)).first()
 
 
-def register_user(db: Session, payload: RegisterRequest) -> RegisterResponse:
+def register_user(
+    db: Session, payload: RegisterRequest, background_tasks: BackgroundTasks
+) -> RegisterResponse:
     normalized_email = payload.email.lower().strip()
 
     existing = db.query(User).filter(User.email == normalized_email).first()
@@ -111,8 +119,11 @@ def register_user(db: Session, payload: RegisterRequest) -> RegisterResponse:
     db.commit()
     db.refresh(user)
 
-    # Log token for development (no SMTP configured)
-    print(f"[DEV] Email verification token for {user.email}: {raw_token}")
+    if EMAIL_DEBUG_PRINT_TOKENS:
+        print(f"[DEV] Email verification token for {user.email}: {raw_token}")
+
+    verification_url = build_verification_url(raw_token)
+    background_tasks.add_task(send_verification_email, user.email, verification_url)
 
     return RegisterResponse(
         message="Account created. Please verify your email before logging in.",
@@ -183,7 +194,9 @@ def verify_email(db: Session, token: str) -> None:
     db.commit()
 
 
-def resend_verification(db: Session, email: str) -> None:
+def resend_verification(
+    db: Session, email: str, background_tasks: BackgroundTasks
+) -> None:
     normalized_email = email.lower().strip()
     user = db.query(User).filter(User.email == normalized_email).first()
 
@@ -195,7 +208,11 @@ def resend_verification(db: Session, email: str) -> None:
         user.email_verification_expires_at = datetime.now(timezone.utc) + timedelta(hours=24)
         db.commit()
 
-        print(f"[DEV] Resent email verification token for {user.email}: {raw_token}")
+        if EMAIL_DEBUG_PRINT_TOKENS:
+            print(f"[DEV] Resent email verification token for {user.email}: {raw_token}")
+
+        verification_url = build_verification_url(raw_token)
+        background_tasks.add_task(send_verification_email, user.email, verification_url)
 
 
 def logout_user(db: Session, raw_refresh_token: str) -> None:

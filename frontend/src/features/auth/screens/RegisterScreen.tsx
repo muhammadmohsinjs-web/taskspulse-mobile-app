@@ -336,6 +336,20 @@ const styles = StyleSheet.create({
     textAlign: "center",
     lineHeight: 24,
   },
+  loginBtn: {
+    backgroundColor: theme.colors.primary,
+    borderRadius: theme.borderRadius.md,
+    height: 52,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: theme.spacing.md,
+    paddingHorizontal: theme.spacing.xl,
+  },
+  loginBtnText: {
+    fontSize: theme.fontSize.md,
+    fontWeight: "700",
+    color: theme.colors.textOnPrimary,
+  },
 });
 
 export default RegisterScreen;

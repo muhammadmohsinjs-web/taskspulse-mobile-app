@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from sqlalchemy.orm import Session
 from database import get_db
 
@@ -28,9 +28,13 @@ router = APIRouter()
     status_code=status.HTTP_201_CREATED,
     summary="Register a new user",
 )
-def register(payload: RegisterRequest, db: Session = Depends(get_db)):
+def register(
+    payload: RegisterRequest,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+):
     try:
-        return service.register_user(db, payload)
+        return service.register_user(db, payload, background_tasks)
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 
@@ -64,14 +68,34 @@ def verify_email(payload: VerifyEmailRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 
+@router.get(
+    "/verify-email",
+    response_model=MessageResponse,
+    status_code=status.HTTP_200_OK,
+    summary="Verify user email via clickable link",
+)
+def verify_email_link(token: str, db: Session = Depends(get_db)):
+    try:
+        service.verify_email(db, token)
+        return MessageResponse(
+            message="Email verified successfully. You can return to TasksPulse and log in."
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
 @router.post(
     "/resend-verification",
     response_model=MessageResponse,
     status_code=status.HTTP_200_OK,
     summary="Resend email verification token",
 )
-def resend_verification(payload: ResendVerificationRequest, db: Session = Depends(get_db)):
-    service.resend_verification(db, payload.email)
+def resend_verification(
+    payload: ResendVerificationRequest,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+):
+    service.resend_verification(db, payload.email, background_tasks)
     return MessageResponse(message="If this email is registered, a verification link has been sent.")
 
 

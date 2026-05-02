@@ -1,4 +1,5 @@
 import pytest
+import tempfile
 import os
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
@@ -12,11 +13,6 @@ from modules.auth.security import (
     generate_email_verification_token,
     hash_email_verification_token,
 )
-
-TEST_DB_PATH = "./test_taskspulse.db"
-SQLALCHEMY_DATABASE_URL = f"sqlite:///{TEST_DB_PATH}"
-engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
-TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
 def override_get_db():
@@ -32,11 +28,18 @@ app.dependency_overrides[get_db] = override_get_db
 
 @pytest.fixture(scope="function", autouse=True)
 def setup_db():
+    global TestingSessionLocal, engine
+    fd, path = tempfile.mkstemp(suffix=".db")
+    os.close(fd)
+    url = f"sqlite:///{path}"
+    engine = create_engine(url, connect_args={"check_same_thread": False})
+    TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
     Base.metadata.create_all(bind=engine)
     yield
+    engine.dispose()
     Base.metadata.drop_all(bind=engine)
-    if os.path.exists(TEST_DB_PATH):
-        os.remove(TEST_DB_PATH)
+    if os.path.exists(path):
+        os.remove(path)
 
 
 @pytest.fixture
