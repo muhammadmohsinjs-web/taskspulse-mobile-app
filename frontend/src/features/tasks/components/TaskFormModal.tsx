@@ -162,7 +162,7 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({
   // ────────────────────────────────────────────────────────────────
 
   return (
-    <Modal visible={visible} onClose={onClose} title={isEditing ? "Edit Task" : "New Task"} overlay={datePickerOverlay}>
+    <Modal visible={visible} onClose={onClose} title={isEditing ? "Edit Task" : "New Task"} overlay={datePickerOverlay} closeOnBackdropPress={false}>
       <Text style={styles.label}>Title</Text>
       <TextInput
         style={styles.input}
@@ -466,6 +466,7 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
     gap: theme.spacing.sm,
     marginTop: theme.spacing.xl,
+    paddingBottom: theme.spacing.lg,
   },
 });
 

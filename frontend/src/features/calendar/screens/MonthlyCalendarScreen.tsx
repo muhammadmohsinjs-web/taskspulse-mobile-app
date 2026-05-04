@@ -8,6 +8,7 @@ import {
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { theme } from "../../../theme/theme";
 import { useRefreshControl } from "../../../hooks/useRefreshControl";
 import { useTasks } from "../../tasks/hooks/useTasks";
@@ -25,6 +26,7 @@ const MONTHS = [
 ];
 
 const MonthlyCalendarScreen: React.FC = () => {
+  const insets = useSafeAreaInsets();
   const today = new Date();
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
   const [currentMonth, setCurrentMonth] = useState(today.getMonth()); // 0-indexed
@@ -97,7 +99,7 @@ const MonthlyCalendarScreen: React.FC = () => {
         refreshControl={refreshControl}
       >
         {/* Month header */}
-        <View style={styles.monthHeader}>
+        <View style={[styles.monthHeader, { paddingTop: insets.top + theme.spacing.md }]}>
           <TouchableOpacity onPress={goToPrevMonth} style={styles.arrowBtn}>
             <Text style={styles.arrow}>←</Text>
           </TouchableOpacity>
@@ -202,8 +204,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: theme.spacing.lg,
-    paddingTop: theme.spacing.xxxl,
-    paddingBottom: theme.spacing.lg,
+    paddingBottom: theme.spacing.md,
     gap: theme.spacing.md,
   },
   arrowBtn: {
@@ -235,7 +236,7 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
   },
   weekStrip: {
-    marginTop: theme.spacing.md,
+    marginTop: theme.spacing.lg,
   },
   weekStripContent: {
     paddingHorizontal: theme.spacing.lg,
@@ -263,7 +264,7 @@ const styles = StyleSheet.create({
   },
   summaryCard: {
     marginHorizontal: theme.spacing.lg,
-    marginTop: theme.spacing.lg,
+    marginTop: theme.spacing.md,
   },
   summaryTitle: {
     fontSize: theme.fontSize.md,

@@ -8,11 +8,12 @@ interface ModalProps {
   title: string;
   children: React.ReactNode;
   overlay?: React.ReactNode;
+  closeOnBackdropPress?: boolean;
 }
 
-const Modal: React.FC<ModalProps> = ({ visible, onClose, title, children, overlay }) => (
+const Modal: React.FC<ModalProps> = ({ visible, onClose, title, children, overlay, closeOnBackdropPress = true }) => (
   <RNModal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-    <Pressable style={styles.overlay} onPress={onClose}>
+    <Pressable style={styles.overlay} onPress={closeOnBackdropPress ? onClose : undefined}>
       <Pressable style={styles.content} onPress={() => {}}>
         <View style={styles.header}>
           <Text style={styles.title}>{title}</Text>

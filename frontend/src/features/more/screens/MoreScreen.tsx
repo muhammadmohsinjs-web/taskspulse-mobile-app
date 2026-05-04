@@ -2,6 +2,7 @@ import React from "react";
 import { View, Text, FlatList, StyleSheet, TouchableOpacity, ScrollView } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { theme } from "../../../theme/theme";
 import Card from "../../../components/ui/Card";
 import { AppIcon, icons } from "../../../components/ui/Icon";
@@ -55,6 +56,7 @@ const MENU_ITEMS: MenuItem[] = [
 ];
 
 const MoreScreen: React.FC = () => {
+  const insets = useSafeAreaInsets();
   const navigation = useNavigation<MoreNavProp>();
 
   const renderItem = ({ item }: { item: MenuItem }) => (
@@ -80,7 +82,10 @@ const MoreScreen: React.FC = () => {
   return (
     <View style={styles.container}>
       <ScrollView
-        contentContainerStyle={styles.listContent}
+        contentContainerStyle={[
+          styles.listContent,
+          { paddingTop: insets.top + theme.spacing.lg },
+        ]}
         keyboardShouldPersistTaps="handled"
       >
         <Text style={styles.heading}>More</Text>
@@ -97,7 +102,10 @@ const MoreScreen: React.FC = () => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.colors.background },
-  listContent: { padding: theme.spacing.lg, paddingBottom: theme.spacing.xxxl },
+  listContent: {
+    paddingHorizontal: theme.spacing.lg,
+    paddingBottom: theme.spacing.xxxl,
+  },
   heading: {
     fontSize: theme.fontSize.heading,
     fontWeight: "800",

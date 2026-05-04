@@ -10,6 +10,7 @@ import {
   Platform,
 } from "react-native";
 import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { theme } from "../../../theme/theme";
 import { useRefreshControl } from "../../../hooks/useRefreshControl";
 import { getErrorMessage } from "../../../utils/error";
@@ -34,6 +35,7 @@ type SortMode = "newest" | "priority";
 const PRIORITY_ORDER: Record<string, number> = { urgent: 0, high: 1, medium: 2, low: 3 };
 
 const BacklogScreen: React.FC = () => {
+  const insets = useSafeAreaInsets();
   const [statusFilter, setStatusFilter] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortMode, setSortMode] = useState<SortMode>("newest");
@@ -184,7 +186,7 @@ const BacklogScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.headerArea}>
+      <View style={[styles.headerArea, { paddingTop: insets.top + theme.spacing.md }]}>
         <View style={styles.searchRow}>
           <View style={styles.searchBar}>
             <AppIcon name={icons.search} size={16} color={theme.colors.textMuted} />
@@ -323,7 +325,6 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.colors.background },
   headerArea: {
     backgroundColor: theme.colors.surface,
-    paddingTop: theme.spacing.md,
     paddingBottom: theme.spacing.sm,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border,

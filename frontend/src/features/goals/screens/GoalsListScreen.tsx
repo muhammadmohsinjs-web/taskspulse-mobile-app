@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { theme, COLORS } from "../../../theme/theme";
 import { useRefreshControl } from "../../../hooks/useRefreshControl";
 import { getErrorMessage } from "../../../utils/error";
@@ -28,6 +29,7 @@ type GoalsListNavProp = NativeStackNavigationProp<GoalsStackParamList, "GoalsLis
 const DEFAULT_COLOR = theme.colors.primary;
 
 const GoalsListScreen: React.FC = () => {
+  const insets = useSafeAreaInsets();
   const navigation = useNavigation<GoalsListNavProp>();
   const { data: goals, isLoading, isError, refetch } = useGoals();
   const createGoal = useCreateGoal();
@@ -115,7 +117,10 @@ const GoalsListScreen: React.FC = () => {
             <EmptyState icon="target" title="No goals yet" subtitle="Tap + to create your first goal" />
           )
         }
-        contentContainerStyle={styles.listContent}
+        contentContainerStyle={[
+          styles.listContent,
+          { paddingTop: insets.top + theme.spacing.lg },
+        ]}
         refreshControl={refreshControl}
       />
 
@@ -180,7 +185,10 @@ const GoalsListScreen: React.FC = () => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.colors.background },
-  listContent: { padding: theme.spacing.lg, paddingBottom: 100 },
+  listContent: {
+    paddingHorizontal: theme.spacing.lg,
+    paddingBottom: 100,
+  },
   label: {
     fontSize: theme.fontSize.sm,
     fontWeight: "600",
@@ -217,6 +225,7 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
     gap: theme.spacing.sm,
     marginTop: theme.spacing.xl,
+    paddingBottom: theme.spacing.lg,
   },
 });
 

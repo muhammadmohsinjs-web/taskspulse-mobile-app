@@ -215,6 +215,7 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
     gap: theme.spacing.sm,
     marginTop: theme.spacing.xl,
+    paddingBottom: theme.spacing.lg,
   },
 });
 

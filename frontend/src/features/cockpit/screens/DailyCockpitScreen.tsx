@@ -518,7 +518,7 @@ const DailyCockpitScreen: React.FC = () => {
 
         {/* Progress Summary */}
         <View style={styles.summaryCard}>
-          <View style={styles.streakPillAbsolute}>
+          <View style={styles.summaryHeaderRow}>
             <StreakPill days={currentStreakDays} />
           </View>
           <View style={styles.summaryContent}>
@@ -821,12 +821,6 @@ const styles = StyleSheet.create({
     shadowRadius: 14,
     elevation: 3,
   },
-  streakPillAbsolute: {
-    position: "absolute",
-    top: theme.spacing.lg,
-    right: theme.spacing.lg,
-    zIndex: 1,
-  },
   streakPill: {
     flexDirection: "row",
     alignItems: "center",
@@ -846,11 +840,14 @@ const styles = StyleSheet.create({
     color: "#FB8C00",
     opacity: 0.8,
   },
+  summaryHeaderRow: {
+    alignItems: "flex-end",
+    marginBottom: theme.spacing.md,
+  },
   summaryContent: {
     flexDirection: "row",
     alignItems: "center",
-    gap: theme.spacing.lg,
-    paddingRight: 90,
+    gap: theme.spacing.md,
   },
 
   // Circular Progress
@@ -940,7 +937,7 @@ const styles = StyleSheet.create({
 
   // Card Section
   cardSection: {
-    marginBottom: theme.spacing.lg,
+    marginBottom: theme.spacing.xxl,
     paddingHorizontal: theme.spacing.xl,
   },
   sectionHeaderInline: {
@@ -1064,7 +1061,7 @@ const styles = StyleSheet.create({
 
   // Tasks Card Wrap with FAB
   tasksCardWrap: {
-    marginBottom: theme.spacing.lg,
+    marginBottom: theme.spacing.xxxl + theme.spacing.md,
   },
   cockpitFab: {
     position: "absolute",
