@@ -585,7 +585,7 @@ const DailyCockpitScreen: React.FC = () => {
           </View>
         </View>
 
-        {/* Tasks Card with FAB */}
+        {/* Tasks Card */}
         <View style={styles.tasksCardWrap}>
           <View style={styles.cardSection}>
             <View style={styles.sectionHeaderInline}>
@@ -614,16 +614,6 @@ const DailyCockpitScreen: React.FC = () => {
               )}
             </View>
           </View>
-
-          <TouchableOpacity
-            style={styles.cockpitFab}
-            onPress={() => setTaskModalVisible(true)}
-            activeOpacity={0.8}
-            accessibilityRole="button"
-            accessibilityLabel="Add task"
-          >
-            <AppIcon name={icons.plus} size={28} color="#FFF" />
-          </TouchableOpacity>
         </View>
 
         {/* Goals Carousel */}
@@ -667,6 +657,16 @@ const DailyCockpitScreen: React.FC = () => {
         {/* Bottom spacer */}
         <View style={{ height: insets.bottom + 96 }} />
       </ScrollView>
+
+      <TouchableOpacity
+        style={styles.cockpitFab}
+        onPress={() => setTaskModalVisible(true)}
+        activeOpacity={0.8}
+        accessibilityRole="button"
+        accessibilityLabel="Add task"
+      >
+        <AppIcon name={icons.plus} size={28} color="#FFF" />
+      </TouchableOpacity>
 
       {/* Task Create Modal */}
       <TaskFormModal
@@ -1061,11 +1061,11 @@ const styles = StyleSheet.create({
 
   // Tasks Card Wrap with FAB
   tasksCardWrap: {
-    marginBottom: theme.spacing.xxxl + theme.spacing.md,
+    marginBottom: theme.spacing.lg,
   },
   cockpitFab: {
     position: "absolute",
-    bottom: -24,
+    bottom: theme.spacing.xxl,
     right: theme.spacing.xl + 12,
     width: 56,
     height: 56,
