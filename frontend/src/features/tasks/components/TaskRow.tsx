@@ -53,6 +53,9 @@ const TaskRow: React.FC<TaskRowProps> = ({ task, onToggle, onPress, onLongPress 
               <Text style={styles.goalCount}>{task.goalIds.length}</Text>
             </View>
           )}
+          {task.status === "in_progress" && (
+            <Text style={styles.inProgressLabel}>In Progress</Text>
+          )}
           {isDone && (
             <Text style={styles.doneLabel}>Done</Text>
           )}
@@ -114,6 +117,11 @@ const styles = StyleSheet.create({
   dueDate: {
     fontSize: theme.fontSize.xs,
     color: theme.colors.textSecondary,
+  },
+  inProgressLabel: {
+    fontSize: theme.fontSize.xs,
+    color: theme.colors.warning,
+    fontWeight: "500",
   },
   doneLabel: {
     fontSize: theme.fontSize.xs,

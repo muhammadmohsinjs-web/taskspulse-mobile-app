@@ -43,12 +43,9 @@ const TaskListScreen: React.FC = () => {
 
   const { refreshControl } = useRefreshControl({ refetch });
 
-  const [createdTaskId, setCreatedTaskId] = useState<string | null>(null);
-
   const closeModal = useCallback(() => {
     setModalVisible(false);
     setEditingTask(null);
-    setCreatedTaskId(null);
     setLinkingGoalId(null);
   }, []);
 
@@ -57,12 +54,14 @@ const TaskListScreen: React.FC = () => {
       setSaving(true);
       try {
         if (editingTask) {
-          await updateTask.mutateAsync({ id: editingTask.id, payload: payload as TaskUpdatePayload });
+          const updatedTask = await updateTask.mutateAsync({ id: editingTask.id, payload: payload as TaskUpdatePayload });
+          closeModal();
+          return updatedTask;
         } else {
           const newTask = await createTask.mutateAsync(payload);
-          setCreatedTaskId(newTask.id);
+          closeModal();
+          return newTask;
         }
-        closeModal();
       } catch (e: unknown) {
         Alert.alert("Error", getErrorMessage(e, "Failed to save task"));
       } finally {
@@ -73,24 +72,28 @@ const TaskListScreen: React.FC = () => {
   );
 
   const handleLinkToGoal = useCallback(
-    async (goalId: string) => {
-      if (!createdTaskId) return;
+    async (goalId: string, taskId?: string) => {
+      if (!taskId) return;
       setLinkingGoalId(goalId);
       try {
-        await linkTaskToGoal.mutateAsync({ goalId, taskId: createdTaskId });
+        await linkTaskToGoal.mutateAsync({ goalId, taskId });
       } catch (e: unknown) {
         Alert.alert("Error", getErrorMessage(e, "Failed to link task to goal"));
       } finally {
         setLinkingGoalId(null);
-        setCreatedTaskId(null);
       }
     },
-    [createdTaskId, linkTaskToGoal]
+    [linkTaskToGoal]
   );
 
   const handleToggle = useCallback(
     (task: Task) => {
-      const nextStatus = task.status === "done" ? "todo" : "done";
+      const nextStatus =
+        task.status === "todo"
+          ? "in_progress"
+          : task.status === "in_progress"
+            ? "done"
+            : "todo";
       updateTask.mutate(
         { id: task.id, payload: { status: nextStatus } },
         { onError: (e: unknown) => Alert.alert("Error", getErrorMessage(e, "Failed to update task")) }

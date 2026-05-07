@@ -12,12 +12,12 @@ import { AppIcon, icons } from "../../../components/ui/Icon";
 interface TaskFormModalProps {
   visible: boolean;
   onClose: () => void;
-  onSave: (payload: TaskCreatePayload) => Promise<void>;
+  onSave: (payload: TaskCreatePayload) => Promise<Task | void>;
   editingTask?: Task | null;
   saving?: boolean;
   preselectedGoalId?: string | null;
   showGoalPicker?: boolean;
-  onLinkToGoal?: (goalId: string) => Promise<void>;
+  onLinkToGoal?: (goalId: string, taskId?: string) => Promise<void>;
   linking?: boolean;
 }
 
@@ -124,7 +124,7 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({
       Alert.alert("Required", "Please enter a task title");
       return;
     }
-    await onSave({
+    const savedTask = await onSave({
       title: title.trim(),
       description: description.trim(),
       status,
@@ -133,8 +133,8 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({
       categoryId: selectedCategoryId,
       recurrenceRule,
     });
-    if (editingTask && selectedGoalId && onLinkToGoal) {
-      await onLinkToGoal(selectedGoalId);
+    if (selectedGoalId && onLinkToGoal) {
+      await onLinkToGoal(selectedGoalId, savedTask?.id ?? editingTask?.id);
     }
   };
 
@@ -162,7 +162,7 @@ const TaskFormModal: React.FC<TaskFormModalProps> = ({
   // ────────────────────────────────────────────────────────────────
 
   return (
-    <Modal visible={visible} onClose={onClose} title={isEditing ? "Edit Task" : "New Task"} overlay={datePickerOverlay}>
+    <Modal visible={visible} onClose={onClose} title={isEditing ? "Edit Task" : "New Task"} overlay={datePickerOverlay} closeOnBackdropPress={false}>
       <Text style={styles.label}>Title</Text>
       <TextInput
         style={styles.input}
@@ -466,6 +466,7 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
     gap: theme.spacing.sm,
     marginTop: theme.spacing.xl,
+    paddingBottom: theme.spacing.lg,
   },
 });
 

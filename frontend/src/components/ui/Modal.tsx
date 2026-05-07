@@ -8,12 +8,16 @@ interface ModalProps {
   title: string;
   children: React.ReactNode;
   overlay?: React.ReactNode;
+  closeOnBackdropPress?: boolean;
 }
 
-const Modal: React.FC<ModalProps> = ({ visible, onClose, title, children, overlay }) => (
+const Modal: React.FC<ModalProps> = ({ visible, onClose, title, children, overlay, closeOnBackdropPress = true }) => (
   <RNModal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-    <Pressable style={styles.overlay} onPress={onClose}>
-      <Pressable style={styles.content} onPress={() => {}}>
+    <View style={styles.overlay}>
+      {closeOnBackdropPress ? (
+        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} />
+      ) : null}
+      <View style={styles.content}>
         <View style={styles.header}>
           <Text style={styles.title}>{title}</Text>
           <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
@@ -21,13 +25,20 @@ const Modal: React.FC<ModalProps> = ({ visible, onClose, title, children, overla
           </TouchableOpacity>
         </View>
         <View style={styles.bodyContainer}>
-          <ScrollView style={styles.body} keyboardShouldPersistTaps="handled">
+          <ScrollView
+            style={styles.body}
+            contentContainerStyle={styles.bodyContent}
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="interactive"
+            nestedScrollEnabled
+            showsVerticalScrollIndicator
+          >
             {children}
           </ScrollView>
           {overlay}
         </View>
-      </Pressable>
-    </Pressable>
+      </View>
+    </View>
   </RNModal>
 );
 
@@ -61,9 +72,12 @@ const styles = StyleSheet.create({
   closeBtnText: { fontSize: 18, color: theme.colors.textMuted },
   bodyContainer: {
     position: "relative",
+    flexShrink: 1,
   },
   body: {
-    maxHeight: 500,
+    flexShrink: 1,
+  },
+  bodyContent: {
     paddingHorizontal: theme.spacing.xl,
     paddingBottom: theme.spacing.xl,
   },

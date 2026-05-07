@@ -14,7 +14,8 @@ import { theme } from "../../../theme/theme";
 import { useRefreshControl } from "../../../hooks/useRefreshControl";
 import { getErrorMessage } from "../../../utils/error";
 import { GoalsStackParamList } from "../../../types";
-import { useGoal, useGoalTasks, useLinkTaskToGoal, useUnlinkTaskFromGoal, useDeleteGoal } from "../hooks/useGoals";
+import { useGoal, useGoalTasks, useLinkTaskToGoal, useUnlinkTaskFromGoal, useDeleteGoal, useUpdateGoal } from "../hooks/useGoals";
+import GoalFormModal from "../components/GoalFormModal";
 import { useTasks, useCreateTask, useUpdateTask, useDeleteTask } from "../../tasks/hooks/useTasks";
 import ProgressBar from "../../../components/ui/ProgressBar";
 import Card from "../../../components/ui/Card";
@@ -43,10 +44,13 @@ const GoalDetailScreen: React.FC = () => {
   const linkTask = useLinkTaskToGoal();
   const unlinkTask = useUnlinkTaskFromGoal();
   const deleteGoal = useDeleteGoal();
+  const updateGoal = useUpdateGoal();
 
   const [addModalVisible, setAddModalVisible] = useState(false);
   const [linkExistingVisible, setLinkExistingVisible] = useState(false);
+  const [editModalVisible, setEditModalVisible] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [savingGoal, setSavingGoal] = useState(false);
   const [linking, setLinking] = useState(false);
   const [selectedTaskIds, setSelectedTaskIds] = useState<Set<string>>(new Set());
 
@@ -62,9 +66,27 @@ const GoalDetailScreen: React.FC = () => {
   );
   const { refreshControl } = useRefreshControl({ refetch: handleRefresh });
 
+  const handleEditGoal = useCallback(async (payload: { title: string; description?: string; targetDate?: string | null; color?: string }) => {
+    setSavingGoal(true);
+    try {
+      await updateGoal.mutateAsync({ id: goalId, payload });
+      setEditModalVisible(false);
+      refetchGoal();
+    } catch (e: unknown) {
+      Alert.alert("Error", getErrorMessage(e, "Failed to update goal"));
+    } finally {
+      setSavingGoal(false);
+    }
+  }, [goalId, updateGoal, refetchGoal]);
+
   const handleToggleTask = useCallback(
     (task: Task) => {
-      const nextStatus = task.status === "done" ? "todo" : "done";
+      const nextStatus =
+        task.status === "todo"
+          ? "in_progress"
+          : task.status === "in_progress"
+            ? "done"
+            : "todo";
       updateTask.mutate(
         { id: task.id, payload: { status: nextStatus } },
         {
@@ -211,9 +233,14 @@ const GoalDetailScreen: React.FC = () => {
             <Card style={goalCardStyle}>
               <View style={styles.goalHeader}>
                 <Text style={styles.goalTitle}>{goal.title}</Text>
-                <TouchableOpacity onPress={handleDeleteGoal} style={styles.deleteBtn}>
-                  <Text style={styles.deleteBtnText}>Delete</Text>
-                </TouchableOpacity>
+                <View style={styles.goalActions}>
+                  <TouchableOpacity onPress={() => setEditModalVisible(true)} style={styles.editBtn}>
+                    <Text style={styles.editBtnText}>Edit</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={handleDeleteGoal} style={styles.deleteBtn}>
+                    <Text style={styles.deleteBtnText}>Delete</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
               {goal.description ? (
                 <Text style={styles.goalDescription}>{goal.description}</Text>
@@ -369,6 +396,15 @@ const GoalDetailScreen: React.FC = () => {
           </View>
         </View>
       </RNModal>
+
+      {/* Edit Goal Modal */}
+      <GoalFormModal
+        visible={editModalVisible}
+        onClose={() => setEditModalVisible(false)}
+        onSave={handleEditGoal}
+        editingGoal={goal}
+        saving={savingGoal}
+      />
     </View>
   );
 };
@@ -411,6 +447,20 @@ const styles = StyleSheet.create({
     fontSize: theme.fontSize.xs,
     color: theme.colors.textMuted,
     marginTop: theme.spacing.sm,
+  },
+  goalActions: {
+    flexDirection: "row",
+    gap: theme.spacing.sm,
+    alignItems: "center",
+  },
+  editBtn: {
+    paddingHorizontal: theme.spacing.sm,
+    paddingVertical: theme.spacing.xs,
+  },
+  editBtnText: {
+    fontSize: theme.fontSize.sm,
+    color: theme.colors.primary,
+    fontWeight: "500",
   },
   deleteBtn: {
     paddingHorizontal: theme.spacing.sm,

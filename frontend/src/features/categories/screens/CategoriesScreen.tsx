@@ -7,6 +7,8 @@ import {
   TouchableOpacity,
   Alert,
   TextInput,
+  Platform,
+  StatusBar,
 } from "react-native";
 import { theme, COLORS } from "../../../theme/theme";
 import { useRefreshControl } from "../../../hooks/useRefreshControl";
@@ -214,8 +216,8 @@ const CategoriesScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: theme.colors.background },
-  listContent: { padding: theme.spacing.lg, paddingBottom: 100 },
+  container: { flex: 1, backgroundColor: theme.colors.background, paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0 },
+  listContent: { padding: theme.spacing.lg, paddingTop: theme.spacing.xxxl, paddingBottom: 100 },
   categoryCard: { marginBottom: theme.spacing.sm },
   categoryRow: { flexDirection: "row", alignItems: "center" },
   colorBadge: { width: 12, height: 12, borderRadius: 6, marginRight: theme.spacing.md },
@@ -263,6 +265,7 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
     gap: theme.spacing.sm,
     marginTop: theme.spacing.xl,
+    paddingBottom: theme.spacing.lg,
   },
 });
 
