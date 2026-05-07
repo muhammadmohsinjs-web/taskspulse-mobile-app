@@ -9,9 +9,10 @@ interface HabitRowProps {
   onToggle: () => void;
   onPress?: () => void;
   onLongPress?: () => void;
+  toggleDisabled?: boolean;
 }
 
-const HabitRow: React.FC<HabitRowProps> = ({ habit, onToggle, onPress, onLongPress }) => {
+const HabitRow: React.FC<HabitRowProps> = ({ habit, onToggle, onPress, onLongPress, toggleDisabled = false }) => {
   const streakColor =
     habit.currentStreak >= 7 ? theme.colors.streakActive : theme.colors.streak;
 
@@ -22,7 +23,12 @@ const HabitRow: React.FC<HabitRowProps> = ({ habit, onToggle, onPress, onLongPre
       onLongPress={onLongPress}
       activeOpacity={0.6}
     >
-      <TouchableOpacity onPress={onToggle} style={styles.checkboxArea} activeOpacity={0.6}>
+      <TouchableOpacity
+        onPress={onToggle}
+        style={[styles.checkboxArea, toggleDisabled && styles.checkboxAreaDisabled]}
+        activeOpacity={0.6}
+        disabled={toggleDisabled}
+      >
         <View style={[styles.checkbox, habit.completedToday && styles.checkboxDone]}>
           <Text style={styles.checkmark}>{habit.completedToday ? "✓" : ""}</Text>
         </View>
@@ -63,6 +69,9 @@ const styles = StyleSheet.create({
   },
   checkboxArea: {
     marginRight: theme.spacing.md,
+  },
+  checkboxAreaDisabled: {
+    opacity: 0.5,
   },
   checkbox: {
     width: 24,

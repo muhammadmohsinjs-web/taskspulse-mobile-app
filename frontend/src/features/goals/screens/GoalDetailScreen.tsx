@@ -81,7 +81,12 @@ const GoalDetailScreen: React.FC = () => {
 
   const handleToggleTask = useCallback(
     (task: Task) => {
-      const nextStatus = task.status === "done" ? "todo" : "done";
+      const nextStatus =
+        task.status === "todo"
+          ? "in_progress"
+          : task.status === "in_progress"
+            ? "done"
+            : "todo";
       updateTask.mutate(
         { id: task.id, payload: { status: nextStatus } },
         {

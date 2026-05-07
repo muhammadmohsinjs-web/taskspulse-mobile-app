@@ -26,6 +26,7 @@ const HabitsListScreen: React.FC = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
   const [saving, setSaving] = useState(false);
+  const [togglingHabitId, setTogglingHabitId] = useState<string | null>(null);
 
   const { refreshControl } = useRefreshControl({ refetch });
 
@@ -73,6 +74,18 @@ const HabitsListScreen: React.FC = () => {
     setModalVisible(true);
   }, []);
 
+  const handleToggle = useCallback((habit: Habit) => {
+    if (togglingHabitId === habit.id) return;
+    setTogglingHabitId(habit.id);
+    toggleHabit.mutate(
+      { id: habit.id, completedToday: habit.completedToday },
+      {
+        onError: (e: unknown) => Alert.alert("Error", getErrorMessage(e, "Failed to update habit")),
+        onSettled: () => setTogglingHabitId(null),
+      }
+    );
+  }, [toggleHabit, togglingHabitId]);
+
   if (isLoading) return <LoadingSpinner message="Loading habits..." />;
 
   return (
@@ -86,13 +99,9 @@ const HabitsListScreen: React.FC = () => {
           <HabitRow
             habit={item}
             onPress={() => openEdit(item)}
-            onToggle={() =>
-              toggleHabit.mutate(
-                { id: item.id, completedToday: item.completedToday },
-                { onError: (e: unknown) => Alert.alert("Error", getErrorMessage(e, "Failed to update habit")) }
-              )
-            }
+            onToggle={() => handleToggle(item)}
             onLongPress={() => handleDelete(item.id)}
+            toggleDisabled={togglingHabitId === item.id}
           />
         )}
         ListEmptyComponent={
