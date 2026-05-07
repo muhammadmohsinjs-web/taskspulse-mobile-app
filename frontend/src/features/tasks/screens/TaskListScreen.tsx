@@ -90,7 +90,12 @@ const TaskListScreen: React.FC = () => {
 
   const handleToggle = useCallback(
     (task: Task) => {
-      const nextStatus = task.status === "done" ? "todo" : "done";
+      const nextStatus =
+        task.status === "todo"
+          ? "in_progress"
+          : task.status === "in_progress"
+            ? "done"
+            : "todo";
       updateTask.mutate(
         { id: task.id, payload: { status: nextStatus } },
         { onError: (e: unknown) => Alert.alert("Error", getErrorMessage(e, "Failed to update task")) }

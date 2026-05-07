@@ -7,23 +7,26 @@ import { FlameIcon } from "../../../components/ui/FlameIcon";
 interface HabitRowProps {
   habit: Pick<Habit, "id" | "title" | "description" | "completedToday" | "currentStreak" | "color">;
   onToggle: () => void;
+  onPress?: () => void;
   onLongPress?: () => void;
 }
 
-const HabitRow: React.FC<HabitRowProps> = ({ habit, onToggle, onLongPress }) => {
+const HabitRow: React.FC<HabitRowProps> = ({ habit, onToggle, onPress, onLongPress }) => {
   const streakColor =
     habit.currentStreak >= 7 ? theme.colors.streakActive : theme.colors.streak;
 
   return (
     <TouchableOpacity
       style={styles.row}
-      onPress={onToggle}
+      onPress={() => onPress?.()}
       onLongPress={onLongPress}
       activeOpacity={0.6}
     >
-      <View style={[styles.checkbox, habit.completedToday && styles.checkboxDone]}>
-        <Text style={styles.checkmark}>{habit.completedToday ? "✓" : ""}</Text>
-      </View>
+      <TouchableOpacity onPress={onToggle} style={styles.checkboxArea} activeOpacity={0.6}>
+        <View style={[styles.checkbox, habit.completedToday && styles.checkboxDone]}>
+          <Text style={styles.checkmark}>{habit.completedToday ? "✓" : ""}</Text>
+        </View>
+      </TouchableOpacity>
 
       <View style={styles.content}>
         <Text style={[styles.title, habit.completedToday && styles.titleDone]}>
@@ -58,6 +61,9 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.sm,
     ...theme.shadow,
   },
+  checkboxArea: {
+    marginRight: theme.spacing.md,
+  },
   checkbox: {
     width: 24,
     height: 24,
@@ -66,7 +72,6 @@ const styles = StyleSheet.create({
     borderColor: theme.colors.border,
     alignItems: "center",
     justifyContent: "center",
-    marginRight: theme.spacing.md,
   },
   checkboxDone: {
     backgroundColor: theme.colors.success,
